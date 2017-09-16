@@ -25,19 +25,18 @@ namespace AnonymousPhotoBin.Controllers {
 
         // POST api/files
         [HttpPost]
-        public async Task<List<DateTime>> Post(List<IFormFile> files, string timezone = null) {
-            List<DateTime> l = new List<DateTime>();
+        public async Task<IEnumerable<string>> Post(List<IFormFile> files, string timezone = null) {
             foreach (var file in files) {
-                using (var s1 = file.OpenReadStream()) {
-                    var directories = ImageMetadataReader.ReadMetadata(s1);
-                    var dateTimeTag = directories.SelectMany(d => d.Tags).Where(d => d.Name == "Date/Time Original").FirstOrDefault();
-                    DateTime taken = DateTime.TryParseExact(dateTimeTag?.Description, "yyyy:MM:dd HH:mm:ss", null, DateTimeStyles.AssumeLocal, out DateTime dt)
-                        ? dt
-                        : DateTime.UtcNow;
-                    l.Add(taken);
+                using (var ms = new MemoryStream()) {
+                    await file.OpenReadStream().CopyToAsync(ms);
+                    byte[] data = ms.ToArray();
+                    System.IO.File.WriteAllBytes("out.jpeg", data);
+                    System.Diagnostics.Process.Start("explorer", "out.jpeg");
+                    await Task.Delay(6000);
+                    System.IO.File.Delete("out.jpeg");
                 }
             }
-            return l;
+            return files.Select(f => f.FileName);
         }
 
         // DELETE api/files/5
