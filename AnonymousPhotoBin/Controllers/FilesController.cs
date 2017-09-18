@@ -25,18 +25,23 @@ namespace AnonymousPhotoBin.Controllers {
 
         // POST api/files
         [HttpPost]
-        public async Task<IEnumerable<string>> Post(List<IFormFile> files, string timezone = null) {
-            foreach (var file in files) {
-                using (var ms = new MemoryStream()) {
-                    await file.OpenReadStream().CopyToAsync(ms);
-                    byte[] data = ms.ToArray();
-                    System.IO.File.WriteAllBytes("out.jpeg", data);
-                    System.Diagnostics.Process.Start("explorer", "out.jpeg");
-                    await Task.Delay(6000);
-                    System.IO.File.Delete("out.jpeg");
+        public async Task<object> Post(List<IFormFile> files, string timezone = null) {
+            try {
+                foreach (var file in files) {
+                    using (var ms = new MemoryStream()) {
+                        await file.OpenReadStream().CopyToAsync(ms);
+                        byte[] data = ms.ToArray();
+                        string f = Guid.NewGuid().ToString() + ".png";
+                        System.IO.File.WriteAllBytes(f, data);
+                        System.Diagnostics.Process.Start("explorer", f);
+                        await Task.Delay(6000);
+                        System.IO.File.Delete(f);
+                    }
                 }
+                return new { };
+            } catch (Exception e) {
+                return new { error = e.Message };
             }
-            return files.Select(f => f.FileName);
         }
 
         // DELETE api/files/5

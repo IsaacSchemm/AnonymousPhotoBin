@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=320px" />
     <title>Upload Photos</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link href="css/fileinput.min.css" media="all" rel="stylesheet" type="text/css" />
     <style type="text/css">
         body {
             text-align: center;
@@ -21,8 +22,7 @@
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
-    <script src="https://malsup.github.io/jquery.form.js"></script> 
-    <script src="http://gregpike.net/demos/bootstrap-file-input/bootstrap.file-input.js"></script>
+    <script src="js/fileinput.min.js"></script>
     <script type="text/javascript">
         $(function () {
             try {
@@ -31,36 +31,8 @@
                 console.error(e);
             }
 
-            $('input[type=file]').bootstrapFileInput();
-
-            var progress = $("progress");
-            var percent = $("#percent");
-            var submit = $("input[type=submit]");
-
-            $('form').ajaxForm({
-                beforeSend: function () {
-                    submit.hide();
-                    progress.val(0);
-                    percent.text('0%');
-                },
-                uploadProgress: function (event, position, total, percentComplete) {
-                    progress.val(percentComplete);
-                    percent.text(percentComplete + '%');
-                },
-                success: function (data) {
-                    progress.val(0);
-                    $("input[type=file]").val("");
-                    $("span.file-input-name").text("");
-                    percent.text("Successfully uploaded " + data.length + " files.");
-                },
-                complete: function (xhr) {
-                    submit.show();
-                    window.status = xhr.responseText;
-                },
-                error: function () {
-                    alert("An unknown error occurred.");
-                }
-            }); 
+            $('input[type=file]').fileinput({ uploadUrl: "/api/files" });
+            $('input[type=submit]').hide();
         });
     </script>
 </head>
@@ -73,9 +45,6 @@
             <div>&nbsp;</div>
             <input type="submit" class="btn btn-primary" value="Upload Files" />
         </form>
-        <div>&nbsp;</div>
-        <progress value="0" max="100"></progress>
-        <div id="percent"></div>
     </div>
 </body>
 </html>
