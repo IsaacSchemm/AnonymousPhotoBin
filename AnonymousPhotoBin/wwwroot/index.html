@@ -13,12 +13,9 @@
         input[type=file] {
             display: inline-block;
         }
-        .file-input-name {
-            display: block;
-        }
-        progress {
-            width: 100%;
-            max-width: 320px;
+        .file-input > .btn {
+            width: 200px;
+            margin: 0.5em;
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
@@ -31,7 +28,19 @@
                 console.error(e);
             }
 
-            $('input[type=file]').fileinput({ uploadUrl: "/api/files" });
+            var f = $('input[type=file]');
+            f.fileinput({
+                required: true,
+                showCaption: false,
+                browseLabel: "Browse for files…",
+                uploadLabel: "Upload selected files",
+                buttonLabelClass: "file-button",
+                hiddenThumbnailContent: true,
+                uploadUrl: "/api/files"
+            }).on("filebatchuploadcomplete", function () {
+                f.fileinput("clear");
+            });
+
             $('input[type=submit]').hide();
         });
     </script>
