@@ -9,14 +9,15 @@ namespace AnonymousPhotoBin.Data {
     public class FileMetadata {
         public Guid FileMetadataId { get; set; }
 
-        public int Width { get; set; }
+        public int? Width { get; set; }
 
-        public int Height { get; set; }
+        public int? Height { get; set; }
 
         public DateTime? TakenAt { get; set; }
 
         public DateTimeOffset UploadedAt { get; set; }
 
+        [Required]
         public string OriginalFilename { get; set; }
 
         public string UserName { get; set; }
@@ -26,6 +27,7 @@ namespace AnonymousPhotoBin.Data {
         [Column(TypeName = "binary(32)")]
         public byte[] Sha256 { get; set; }
 
+        [Required]
         public string ContentType { get; set; }
 
         public int FileDataId { get; set; }
@@ -37,9 +39,5 @@ namespace AnonymousPhotoBin.Data {
 
         [ForeignKey(nameof(JpegThumbnailId))]
         public FileData JpegThumbnail { get; set; }
-
-        public string Url => "/api/files/" + FileMetadataId;
-
-        public string ThumbnailUrl => "/api/thumbnails/" + FileMetadataId;
     }
 }

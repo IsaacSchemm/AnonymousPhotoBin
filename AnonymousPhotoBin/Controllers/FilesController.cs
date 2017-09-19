@@ -107,8 +107,8 @@ namespace AnonymousPhotoBin.Controllers {
                     }
 
                     FileMetadata f = new FileMetadata {
-                        Width = width ?? 10,
-                        Height = height ?? 10,
+                        Width = width,
+                        Height = height,
                         TakenAt = takenAtDateTime,
                         UploadedAt = DateTime.UtcNow,
                         OriginalFilename = file.FileName,
