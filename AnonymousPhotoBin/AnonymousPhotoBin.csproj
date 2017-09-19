@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\scripts\list.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.1" />
     <PackageReference Include="Microsoft.AspNetCore" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0" />
@@ -30,6 +34,10 @@
     <None Include="wwwroot\scripts\index.js" />
     <None Include="wwwroot\scripts\index.js.map" />
     <None Include="wwwroot\scripts\index.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\scripts\list.ts" />
   </ItemGroup>
 
 </Project>

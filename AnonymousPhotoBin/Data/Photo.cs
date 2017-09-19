@@ -35,5 +35,9 @@ namespace AnonymousPhotoBin.Data {
 
         [ForeignKey(nameof(ThumbnailDataId))]
         public PhotoData ThumbnailData { get; set; }
+
+        public string Url => "/api/files/" + PhotoId;
+
+        public string ThumbnailUrl => "/api/thumbnails/" + PhotoId;
     }
 }

@@ -1,0 +1,69 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>List Photos</title>
+    <link rel="stylesheet"
+          href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"
+            integrity="sha256-owX7sroiO/O1a7h3a4X29A1g3QgqdNvijRQ7V5TH45M="
+            crossorigin="anonymous"></script>
+    <script src="scripts/list.js"></script>
+    <style type="text/css">
+        .file {
+            display: inline-block;
+            background-color: #f0f0f0;
+            margin-left: 10px;
+            margin-bottom: 10px;
+            padding: 0 10px;
+            border-radius: 5px;
+            border: 1px solid #888;
+            cursor: pointer;
+        }
+        .file > * {
+            display: inline-block;
+        }
+        .file .ck {
+            text-align: center;
+            margin: 0;
+        }
+        .file .ck input[type=checkbox]{
+            pointer-events: none;
+        }
+        .file img {
+            max-width: 240px;
+            height: 120px;
+            margin: 0 10px;
+        }
+        .file.checked {
+            background-color: #c0d0e0;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="ko-area" style="display: none" data-bind="style: { display: 'block' }">
+            <!-- ko foreach: files -->
+            <div class="file" data-bind="css: { checked: checked }, click: function () { checked(!checked()) }">
+                <div class="ck">
+                    <input type="checkbox" data-bind="checked: checked" />
+                </div>
+                <div>
+                    <img data-bind="attr: { src: thumbnailUrl }" />
+                </div>
+                <div>
+                    <div>Taken: <span data-bind="text: takenAt"></span></div>
+                    <div>Uploaded: <span data-bind="text: uploadedAt"></span></div>
+                    <div>Name: <span data-bind="text: originalFilename"></span></div>
+                    <div>Uploaded by: <span data-bind="text: name"></span></div>
+                    <div>Category: <span data-bind="text: category"></span></div>
+                </div>
+            </div>
+            <!-- /ko -->
+        </div>
+    </div>
+</body>
+</html>
