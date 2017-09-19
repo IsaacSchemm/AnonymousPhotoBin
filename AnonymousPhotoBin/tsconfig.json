@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
     "noImplicitAny": true,
+    "noImplicitThis": true,
     "noEmitOnError": true,
     "sourceMap": true,
     "strictNullChecks": true,
-    "target": "es5"
+    "target": "es6"
   },
   "files": [
     "wwwroot/scripts/index.ts"
