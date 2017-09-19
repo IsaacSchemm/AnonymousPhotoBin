@@ -7,20 +7,48 @@ using Microsoft.AspNetCore.Http;
 using System.IO;
 using MetadataExtractor;
 using System.Globalization;
+using AnonymousPhotoBin.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 
 namespace AnonymousPhotoBin.Controllers {
-    [Route("api/[controller]")]
     public class FilesController : Controller {
-        // GET api/files
+        private static SHA256 _sha256 = SHA256.Create();
+
+        private readonly PhotoBinDbContext _context;
+
+        public FilesController(PhotoBinDbContext context) {
+            _context = context;
+        }
+        
         [HttpGet]
-        public IEnumerable<string> Get() {
-            throw new NotImplementedException();
+        [Route("api/files")]
+        public async Task<IEnumerable<Photo>> Get() {
+            return await _context.Photos.ToListAsync();
         }
 
-        // GET api/files/5
-        [HttpGet("{id}")]
-        public string Get(int id) {
-            throw new NotImplementedException();
+        [HttpGet]
+        [Route("api/files/{id}")]
+        public async Task<IActionResult> Get(Guid id) {
+            var photo = await _context.Photos.Include(nameof(Photo.PhotoData)).FirstOrDefaultAsync(p => p.PhotoId == id);
+            if (photo == null) {
+                return NotFound();
+            } else {
+                return File(photo.PhotoData.Data, photo.PhotoData.ContentType);
+            }
+        }
+
+        [HttpGet]
+        [Route("api/thumbnails/{id}")]
+        public async Task<IActionResult> GetThumbnail(Guid id) {
+            var photo = await _context.Photos.Include(nameof(Photo.PhotoData)).FirstOrDefaultAsync(p => p.PhotoId == id);
+            if (photo == null) {
+                return NotFound();
+            } else if (photo.PhotoData == null) {
+                return await Get(id);
+            } else {
+                return File(photo.PhotoData.Data, photo.PhotoData.ContentType);
+            }
         }
 
         public class UploadedFile {
@@ -28,8 +56,8 @@ namespace AnonymousPhotoBin.Controllers {
             public long size;
         }
 
-        // POST api/files
         [HttpPost]
+        [Route("api/files")]
         public async Task<object> Post(List<IFormFile> files, string timezone = null) {
             List<UploadedFile> l = new List<UploadedFile>();
             foreach (var file in files) {
@@ -37,27 +65,45 @@ namespace AnonymousPhotoBin.Controllers {
                 using (var ms = new MemoryStream()) {
                     await file.OpenReadStream().CopyToAsync(ms);
                     byte[] data = ms.ToArray();
-                    string f = Guid.NewGuid().ToString() + ".png";
-                    System.IO.File.WriteAllBytes(f, data);
-                    //System.Diagnostics.Process.Start("explorer", f);
-                    await Task.Delay(3000);
-                    System.IO.File.Delete(f);
+
+                    Photo photo = new Photo {
+                        Width = 10,
+                        Height = 10,
+                        TakenAt = null,
+                        UploadedAt = DateTime.UtcNow,
+                        OriginalFilename = file.FileName,
+                        SHA256 = _sha256.ComputeHash(data),
+                        PhotoData = new PhotoData {
+                            ContentType = file.ContentType,
+                            Data = data
+                        }
+                    };
+                    _context.Photos.Add(photo);
+                    await _context.SaveChangesAsync();
+
+                    l.Add(new UploadedFile {
+                        url = $"/api/files/{photo.PhotoId}",
+                        thumbnailUrl = $"/api/thumbnails/{photo.PhotoId}",
+                        name = file.FileName,
+                        type = file.ContentType,
+                        size = file.Length
+                    });
                 }
-                l.Add(new UploadedFile {
-                    url = "https://s0.2mdn.net/5585042/320x100_WS_2016_3_.png",
-                    thumbnailUrl = "https://s0.2mdn.net/5585042/320x100_WS_2016_3_.png",
-                    name = file.FileName,
-                    type = file.ContentType,
-                    size = file.Length
-                });
             }
             return new { files = l };
         }
-
-        // DELETE api/files/5
-        [HttpDelete("{id}")]
-        public void Delete(int id) {
-            throw new NotImplementedException();
+        
+        [HttpDelete]
+        [Route("api/files/{id}")]
+        public async Task<StatusCodeResult> Delete(Guid id) {
+            var photo = await _context.Photos.FirstOrDefaultAsync(p => p.PhotoId == id);
+            if (photo == null) {
+                return NotFound();
+            } else {
+                _context.Photos.Remove(photo);
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
         }
     }
 }

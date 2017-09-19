@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace AnonymousPhotoBin.Data {
     public class Photo {
-        public int PhotoId { get; set; }
+        public Guid PhotoId { get; set; }
 
         public int Width { get; set; }
 
@@ -23,12 +23,12 @@ namespace AnonymousPhotoBin.Data {
 
         public string Category { get; set; }
 
-        public int PhotoDataId { get; set; }
-
-        [Column(TypeName = "binary"), MaxLength(32)]
+        [Column(TypeName = "binary(32)")]
         public byte[] SHA256 { get; set; }
 
-        public int ThumbnailDataId { get; set; }
+        public int PhotoDataId { get; set; }
+
+        public int? ThumbnailDataId { get; set; }
 
         [ForeignKey(nameof(PhotoDataId))]
         public PhotoData PhotoData { get; set; }
