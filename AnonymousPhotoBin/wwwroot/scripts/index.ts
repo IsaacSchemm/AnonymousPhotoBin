@@ -4,15 +4,22 @@
 
 interface FileData extends JQueryFileInputOptions {
     process: () => JQueryPromise<void>;
-    submit: () => JQueryPromise<void>;
+    submit: () => JQueryPromise<any>;
+}
+
+interface UploadedFileResult {
+    url: string;
+    thumbnailUrl: string;
+    name: string;
 }
 
 class FileUploadViewModel {
     readonly files: KnockoutObservableArray<FileData>;
     readonly fileProgress: KnockoutObservable<number>;
-    readonly caption1: KnockoutObservable<string>;
+    readonly caption1: KnockoutObservable<string | null>;
     readonly totalProgress: KnockoutObservable<number>;
-    readonly caption2: KnockoutObservable<string>;
+    readonly caption2: KnockoutObservable<string | null>;
+    readonly uploaded: KnockoutObservableArray<UploadedFileResult>;
     readonly uploading: KnockoutObservable<boolean>;
 
     readonly fileProgressPercentage: KnockoutComputed<string>;
@@ -23,8 +30,9 @@ class FileUploadViewModel {
         this.files = ko.observableArray();
         this.fileProgress = ko.observable(0);
         this.totalProgress = ko.observable(0);
-        this.caption1 = ko.observable("");
-        this.caption2 = ko.observable("");
+        this.caption1 = ko.observable(null);
+        this.caption2 = ko.observable(null);
+        this.uploaded = ko.observableArray();
         this.uploading = ko.observable(false);
 
         this.fileProgressPercentage = ko.pureComputed(() => `${this.fileProgress() * 100}%`);
@@ -70,7 +78,13 @@ class FileUploadViewModel {
                 this.caption1(`Uploading ${data.files[0].name}...`);
 
                 await data.process();
-                await data.submit();
+                let result = await data.submit();
+
+                if (result && result.files) {
+                    for (const f of result.files) {
+                        this.uploaded.unshift(f);
+                    }
+                }
 
                 filesUploaded++;
                 this.caption1("");
@@ -86,6 +100,10 @@ class FileUploadViewModel {
         this.fileProgress(0);
         this.totalProgress(0);
         this.uploading(false);
+    }
+
+    clearUploaded() {
+        this.uploaded([]);
     }
 }
 
