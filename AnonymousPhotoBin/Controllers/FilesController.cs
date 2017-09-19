@@ -25,31 +25,31 @@ namespace AnonymousPhotoBin.Controllers {
         
         [HttpGet]
         [Route("api/files")]
-        public async Task<IEnumerable<Photo>> Get() {
-            return await _context.Photos.ToListAsync();
+        public async Task<IEnumerable<FileMetadata>> Get() {
+            return await _context.FileMetadata.ToListAsync();
         }
 
         [HttpGet]
         [Route("api/files/{id}")]
         public async Task<IActionResult> Get(Guid id) {
-            var photo = await _context.Photos.Include(nameof(Photo.PhotoData)).FirstOrDefaultAsync(p => p.PhotoId == id);
+            var photo = await _context.FileMetadata.Include(nameof(FileMetadata.FileData)).FirstOrDefaultAsync(p => p.FileMetadataId == id);
             if (photo == null) {
                 return NotFound();
             } else {
-                return File(photo.PhotoData.Data, photo.PhotoData.ContentType);
+                return File(photo.FileData.Data, photo.ContentType);
             }
         }
 
         [HttpGet]
         [Route("api/thumbnails/{id}")]
         public async Task<IActionResult> GetThumbnail(Guid id) {
-            var photo = await _context.Photos.Include(nameof(Photo.ThumbnailData)).FirstOrDefaultAsync(p => p.PhotoId == id);
+            var photo = await _context.FileMetadata.Include(nameof(FileMetadata.JpegThumbnail)).FirstOrDefaultAsync(p => p.FileMetadataId == id);
             if (photo == null) {
                 return NotFound();
-            } else if (photo.ThumbnailData == null) {
+            } else if (photo.JpegThumbnail == null) {
                 return await Get(id);
             } else {
-                return File(photo.ThumbnailData.Data, photo.ThumbnailData.ContentType);
+                return File(photo.JpegThumbnail.Data, "image/jpeg");
             }
         }
 
@@ -70,7 +70,7 @@ namespace AnonymousPhotoBin.Controllers {
                     int? width = null;
                     int? height = null;
                     string takenAt = null;
-                    PhotoData thumbnail = null;
+                    FileData thumbnail = null;
                     using (var image = Image.Load(data)) {
                         width = image.Width;
                         height = image.Height;
@@ -94,8 +94,7 @@ namespace AnonymousPhotoBin.Controllers {
 
                             using (var jpegThumb = new MemoryStream()) {
                                 image.SaveAsJpeg(jpegThumb);
-                                thumbnail = new PhotoData {
-                                    ContentType = "image/jpeg",
+                                thumbnail = new FileData {
                                     Data = jpegThumb.ToArray()
                                 };
                             }
@@ -107,25 +106,25 @@ namespace AnonymousPhotoBin.Controllers {
                         takenAtDateTime = dt;
                     }
 
-                    Photo photo = new Photo {
+                    FileMetadata f = new FileMetadata {
                         Width = width ?? 10,
                         Height = height ?? 10,
                         TakenAt = takenAtDateTime,
                         UploadedAt = DateTime.UtcNow,
                         OriginalFilename = file.FileName,
-                        SHA256 = SHA256.ComputeHash(data),
-                        PhotoData = new PhotoData {
-                            ContentType = file.ContentType,
+                        Sha256 = SHA256.ComputeHash(data),
+                        ContentType = file.ContentType,
+                        FileData = new FileData {
                             Data = data
                         },
-                        ThumbnailData = thumbnail
+                        JpegThumbnail = thumbnail
                     };
-                    _context.Photos.Add(photo);
+                    _context.FileMetadata.Add(f);
                     await _context.SaveChangesAsync();
 
                     l.Add(new UploadedFile {
-                        url = $"/api/files/{photo.PhotoId}",
-                        thumbnailUrl = $"/api/thumbnails/{photo.PhotoId}",
+                        url = $"/api/files/{f.FileMetadataId}",
+                        thumbnailUrl = $"/api/thumbnails/{f.FileMetadataId}",
                         name = file.FileName
                     });
                 }
@@ -136,11 +135,11 @@ namespace AnonymousPhotoBin.Controllers {
         [HttpDelete]
         [Route("api/files/{id}")]
         public async Task<StatusCodeResult> Delete(Guid id) {
-            var photo = await _context.Photos.FirstOrDefaultAsync(p => p.PhotoId == id);
-            if (photo == null) {
+            var f = await _context.FileMetadata.FirstOrDefaultAsync(p => p.FileMetadataId == id);
+            if (f == null) {
                 return NotFound();
             } else {
-                _context.Photos.Remove(photo);
+                _context.FileMetadata.Remove(f);
                 await _context.SaveChangesAsync();
                 return NoContent();
             }

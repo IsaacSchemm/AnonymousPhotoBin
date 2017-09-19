@@ -4,11 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace AnonymousPhotoBin.Data {
-    public class PhotoData {
-        public int PhotoDataId { get; set; }
+    public class FileData {
+        public int FileDataId { get; set; }
 
         public byte[] Data { get; set; }
-
-        public string ContentType { get; set; }
     }
 }

@@ -10,70 +10,70 @@ namespace AnonymousPhotoBin.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "PhotoData",
+                name: "FileData",
                 columns: table => new
                 {
-                    PhotoDataId = table.Column<int>(type: "int", nullable: false)
+                    FileDataId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    ContentType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Data = table.Column<byte[]>(type: "varbinary(max)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PhotoData", x => x.PhotoDataId);
+                    table.PrimaryKey("PK_FileData", x => x.FileDataId);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Photos",
+                name: "FileMetadata",
                 columns: table => new
                 {
-                    PhotoId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FileMetadataId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Category = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ContentType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FileDataId = table.Column<int>(type: "int", nullable: false),
                     Height = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    JpegThumbnailId = table.Column<int>(type: "int", nullable: true),
                     OriginalFilename = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhotoDataId = table.Column<int>(type: "int", nullable: false),
-                    SHA256 = table.Column<byte[]>(type: "binary(32)", nullable: true),
+                    Sha256 = table.Column<byte[]>(type: "binary(32)", nullable: true),
                     TakenAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    ThumbnailDataId = table.Column<int>(type: "int", nullable: true),
                     UploadedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Width = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Photos", x => x.PhotoId);
+                    table.PrimaryKey("PK_FileMetadata", x => x.FileMetadataId);
                     table.ForeignKey(
-                        name: "FK_Photos_PhotoData_PhotoDataId",
-                        column: x => x.PhotoDataId,
-                        principalTable: "PhotoData",
-                        principalColumn: "PhotoDataId",
+                        name: "FK_FileMetadata_FileData_FileDataId",
+                        column: x => x.FileDataId,
+                        principalTable: "FileData",
+                        principalColumn: "FileDataId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Photos_PhotoData_ThumbnailDataId",
-                        column: x => x.ThumbnailDataId,
-                        principalTable: "PhotoData",
-                        principalColumn: "PhotoDataId",
+                        name: "FK_FileMetadata_FileData_JpegThumbnailId",
+                        column: x => x.JpegThumbnailId,
+                        principalTable: "FileData",
+                        principalColumn: "FileDataId",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Photos_PhotoDataId",
-                table: "Photos",
-                column: "PhotoDataId");
+                name: "IX_FileMetadata_FileDataId",
+                table: "FileMetadata",
+                column: "FileDataId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Photos_ThumbnailDataId",
-                table: "Photos",
-                column: "ThumbnailDataId");
+                name: "IX_FileMetadata_JpegThumbnailId",
+                table: "FileMetadata",
+                column: "JpegThumbnailId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Photos");
+                name: "FileMetadata");
 
             migrationBuilder.DropTable(
-                name: "PhotoData");
+                name: "FileData");
         }
     }
 }
