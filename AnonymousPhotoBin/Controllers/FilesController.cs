@@ -23,25 +23,34 @@ namespace AnonymousPhotoBin.Controllers {
             throw new NotImplementedException();
         }
 
+        public class UploadedFile {
+            public string url, thumbnailUrl, name, type;
+            public long size;
+        }
+
         // POST api/files
         [HttpPost]
         public async Task<object> Post(List<IFormFile> files, string timezone = null) {
-            try {
-                foreach (var file in files) {
-                    using (var ms = new MemoryStream()) {
-                        await file.OpenReadStream().CopyToAsync(ms);
-                        byte[] data = ms.ToArray();
-                        string f = Guid.NewGuid().ToString() + ".png";
-                        System.IO.File.WriteAllBytes(f, data);
-                        System.Diagnostics.Process.Start("explorer", f);
-                        await Task.Delay(6000);
-                        System.IO.File.Delete(f);
-                    }
+            List<UploadedFile> l = new List<UploadedFile>();
+            foreach (var file in files) {
+                using (var ms = new MemoryStream()) {
+                    await file.OpenReadStream().CopyToAsync(ms);
+                    byte[] data = ms.ToArray();
+                    string f = Guid.NewGuid().ToString() + ".png";
+                    System.IO.File.WriteAllBytes(f, data);
+                    //System.Diagnostics.Process.Start("explorer", f);
+                    await Task.Delay(3000);
+                    System.IO.File.Delete(f);
                 }
-                return new { };
-            } catch (Exception e) {
-                return new { error = e.Message };
+                l.Add(new UploadedFile {
+                    url = "https://s0.2mdn.net/5585042/320x100_WS_2016_3_.png",
+                    thumbnailUrl = "https://s0.2mdn.net/5585042/320x100_WS_2016_3_.png",
+                    name = file.FileName,
+                    type = file.ContentType,
+                    size = file.Length
+                });
             }
+            return new { files = l };
         }
 
         // DELETE api/files/5

@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=320px" />
     <title>Upload Photos</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link href="css/fileinput.min.css" media="all" rel="stylesheet" type="text/css" />
     <style type="text/css">
         body {
             text-align: center;
@@ -13,14 +12,16 @@
         input[type=file] {
             display: inline-block;
         }
-        .file-input > .btn {
-            width: 200px;
-            margin: 0.5em;
-        }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js"></script>
-    <script src="js/fileinput.min.js"></script>
+    <script src="http://code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+    <script src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+            integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+            crossorigin="anonymous"></script>
+    <script src="js/jquery.fileupload.js"></script>
     <script type="text/javascript">
+        var datas = [];
         $(function () {
             try {
                 document.querySelector("input[name=timezone]").value = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -28,32 +29,65 @@
                 console.error(e);
             }
 
-            var f = $('input[type=file]');
-            f.fileinput({
-                required: true,
-                showCaption: false,
-                browseLabel: "Browse for files…",
-                uploadLabel: "Upload selected files",
-                buttonLabelClass: "file-button",
-                hiddenThumbnailContent: true,
-                uploadUrl: "/api/files"
-            }).on("filebatchuploadcomplete", function () {
-                f.fileinput("clear");
-            });
+            var filesUploaded = 0;
 
-            $('input[type=submit]').hide();
+            $("form").fileupload({
+                url: "/api/files",
+                sequentialUploads: true,
+                dataType: "json",
+                add: function (e, data) {
+                    /*console.log(data.files);
+                    if (confirm("You have selected ")) {
+                        data.process().done(function () {
+                            data.submit();
+                        });
+                    }*/
+                    datas.push(data);
+                },
+                send: function (e, data) {
+                    $("#files").text(`Uploading ${data.files[0].name}...`);
+                },
+                done: function (e, data) {
+                    $("#files").text(`Uploaded ${++filesUploaded} files.`);
+                },
+                progressall: function (e, data) {
+                    var progress = parseInt(data.loaded / data.total * 100, 10);
+                    $('#progress .progress-bar').css('width', progress + '%');
+                }
+            })
+
+            $("form").hide();
+            $("#chooseFiles").click(function () {
+                $("input[type=file]").click();
+            });
+            /*var pp = (async () => {
+    for (let d of datas) {
+        await d.process();
+        await d.submit();
+    }
+})()/*
         });
     </script>
 </head>
 <body>
     <div id="container">
+        <h1>Upload Files</h1>
         <form method="post" enctype="multipart/form-data" action="/api/files">
-            <h1>Upload Files</h1>
             <input type="file" name="files" multiple />
             <input type="hidden" name="timezone" value="" />
             <div>&nbsp;</div>
             <input type="submit" class="btn btn-primary" value="Upload Files" />
         </form>
+        <div id="chooseFiles" class="btn btn-primary">Choose files to upload...</div>
+        <br />
+        <br />
+        <!-- The global progress bar -->
+        <div id="progress" class="progress">
+            <div class="progress-bar progress-bar-success"></div>
+        </div>
+        <!-- The container for the uploaded files -->
+        <div id="files" class="files"></div>
+        <br>
     </div>
 </body>
 </html>
