@@ -80,8 +80,8 @@ class FileUploadViewModel {
                 await data.process();
                 let result = await data.submit();
 
-                if (result && result.files) {
-                    for (const f of result.files) {
+                if (result) {
+                    for (const f of result) {
                         this.uploaded.unshift(f);
                     }
                 }

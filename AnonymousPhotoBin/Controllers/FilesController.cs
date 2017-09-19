@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System.IO;
-using MetadataExtractor;
 using System.Globalization;
 using AnonymousPhotoBin.Data;
 using Microsoft.EntityFrameworkCore;
@@ -56,13 +54,12 @@ namespace AnonymousPhotoBin.Controllers {
         }
 
         public class UploadedFile {
-            public string url, thumbnailUrl, name, type;
-            public long size;
+            public string url, thumbnailUrl, name;
         }
 
         [HttpPost]
         [Route("api/files")]
-        public async Task<object> Post(List<IFormFile> files, string timezone = null) {
+        public async Task<List<UploadedFile>> Post(List<IFormFile> files, string timezone = null) {
             List<UploadedFile> l = new List<UploadedFile>();
             foreach (var file in files) {
                 if (file.FileName == "mark.png") throw new Exception("test");
@@ -78,7 +75,9 @@ namespace AnonymousPhotoBin.Controllers {
                         width = image.Width;
                         height = image.Height;
                         takenAt = image.MetaData?.ExifProfile?.GetValue(ExifTag.DateTimeOriginal)?.Value?.ToString();
-                        
+
+                        image.Mutate(x => x.AutoOrient());
+
                         if (image.Width > MAX_WIDTH || image.Height > MAX_HEIGHT) {
                             double ratio = (double)image.Width / image.Height;
                             int newW, newH;
@@ -91,10 +90,8 @@ namespace AnonymousPhotoBin.Controllers {
                                 newH = MAX_HEIGHT;
                                 newW = (int)(newH * ratio);
                             }
+                            image.Mutate(x => x.Resize(newW, newH));
 
-                            image.Mutate(x => x
-                                .AutoOrient()
-                                .Resize(newW, newH));
                             using (var jpegThumb = new MemoryStream()) {
                                 image.SaveAsJpeg(jpegThumb);
                                 thumbnail = new PhotoData {
@@ -129,13 +126,11 @@ namespace AnonymousPhotoBin.Controllers {
                     l.Add(new UploadedFile {
                         url = $"/api/files/{photo.PhotoId}",
                         thumbnailUrl = $"/api/thumbnails/{photo.PhotoId}",
-                        name = file.FileName,
-                        type = file.ContentType,
-                        size = file.Length
+                        name = file.FileName
                     });
                 }
             }
-            return new { files = l };
+            return l;
         }
         
         [HttpDelete]
