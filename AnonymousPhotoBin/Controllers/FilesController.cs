@@ -10,10 +10,14 @@ using System.Globalization;
 using AnonymousPhotoBin.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.MetaData.Profiles.Exif;
 
 namespace AnonymousPhotoBin.Controllers {
     public class FilesController : Controller {
-        private static SHA256 _sha256 = SHA256.Create();
+        private static SHA256 SHA256 = SHA256.Create();
+        private static int MAX_WIDTH = 320;
+        private static int MAX_HEIGHT = 160;
 
         private readonly PhotoBinDbContext _context;
 
@@ -41,13 +45,13 @@ namespace AnonymousPhotoBin.Controllers {
         [HttpGet]
         [Route("api/thumbnails/{id}")]
         public async Task<IActionResult> GetThumbnail(Guid id) {
-            var photo = await _context.Photos.Include(nameof(Photo.PhotoData)).FirstOrDefaultAsync(p => p.PhotoId == id);
+            var photo = await _context.Photos.Include(nameof(Photo.ThumbnailData)).FirstOrDefaultAsync(p => p.PhotoId == id);
             if (photo == null) {
                 return NotFound();
-            } else if (photo.PhotoData == null) {
+            } else if (photo.ThumbnailData == null) {
                 return await Get(id);
             } else {
-                return File(photo.PhotoData.Data, photo.PhotoData.ContentType);
+                return File(photo.ThumbnailData.Data, photo.ThumbnailData.ContentType);
             }
         }
 
@@ -66,17 +70,58 @@ namespace AnonymousPhotoBin.Controllers {
                     await file.OpenReadStream().CopyToAsync(ms);
                     byte[] data = ms.ToArray();
 
+                    int? width = null;
+                    int? height = null;
+                    string takenAt = null;
+                    PhotoData thumbnail = null;
+                    using (var image = Image.Load(data)) {
+                        width = image.Width;
+                        height = image.Height;
+                        takenAt = image.MetaData?.ExifProfile?.GetValue(ExifTag.DateTimeOriginal)?.Value?.ToString();
+                        
+                        if (image.Width > MAX_WIDTH || image.Height > MAX_HEIGHT) {
+                            double ratio = (double)image.Width / image.Height;
+                            int newW, newH;
+                            if (ratio > (double)MAX_WIDTH / MAX_HEIGHT) {
+                                // wider
+                                newW = MAX_WIDTH;
+                                newH = (int)(newW / ratio);
+                            } else {
+                                // taller
+                                newH = MAX_HEIGHT;
+                                newW = (int)(newH * ratio);
+                            }
+
+                            image.Mutate(x => x
+                                .AutoOrient()
+                                .Resize(newW, newH));
+                            using (var jpegThumb = new MemoryStream()) {
+                                image.SaveAsJpeg(jpegThumb);
+                                thumbnail = new PhotoData {
+                                    ContentType = "image/jpeg",
+                                    Data = jpegThumb.ToArray()
+                                };
+                            }
+                        }
+                    }
+
+                    DateTime? takenAtDateTime = null;
+                    if (DateTime.TryParseExact(takenAt, "yyyy:MM:dd HH:mm:ss", null, DateTimeStyles.AssumeLocal, out DateTime dt)) {
+                        takenAtDateTime = dt;
+                    }
+
                     Photo photo = new Photo {
-                        Width = 10,
-                        Height = 10,
-                        TakenAt = null,
+                        Width = width ?? 10,
+                        Height = height ?? 10,
+                        TakenAt = takenAtDateTime,
                         UploadedAt = DateTime.UtcNow,
                         OriginalFilename = file.FileName,
-                        SHA256 = _sha256.ComputeHash(data),
+                        SHA256 = SHA256.ComputeHash(data),
                         PhotoData = new PhotoData {
                             ContentType = file.ContentType,
                             Data = data
-                        }
+                        },
+                        ThumbnailData = thumbnail
                     };
                     _context.Photos.Add(photo);
                     await _context.SaveChangesAsync();

@@ -73,7 +73,9 @@
             <br />
             <br />
             <!-- ko foreach: uploaded -->
-            <img data-bind="attr: { src: thumbnailUrl }" />
+            <a href="#" data-bind="attr: { href: url }">
+                <img data-bind="attr: { src: thumbnailUrl }" />
+            </a>
             <div data-bind="text: name"></div>
             <br />
             <!-- /ko -->
