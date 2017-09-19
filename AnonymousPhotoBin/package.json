@@ -1,0 +1,9 @@
+{
+  "version": "0.1.0",
+  "name": "anonymous-photo-bin",
+  "private": true,
+  "devDependencies": {
+    "@types/jquery": "^3.2.12",
+    "@types/jquery.fileupload": "^5.40.36"
+  }
+}

@@ -19,54 +19,17 @@
     <script src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
             integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
             crossorigin="anonymous"></script>
-    <script src="js/jquery.fileupload.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.19.1/js/jquery.fileupload.js"
+            integrity="sha256-JBs/UTfhY8RkCwyn7zMxTDLcINzVqW/RzOqwdaPgh34="
+            crossorigin="anonymous"></script>
+    <script src="scripts/index.js"></script>
     <script type="text/javascript">
-        var datas = [];
-        $(function () {
-            try {
-                document.querySelector("input[name=timezone]").value = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            } catch (e) {
-                console.error(e);
-            }
-
-            var filesUploaded = 0;
-
-            $("form").fileupload({
-                url: "/api/files",
-                sequentialUploads: true,
-                dataType: "json",
-                add: function (e, data) {
-                    /*console.log(data.files);
-                    if (confirm("You have selected ")) {
-                        data.process().done(function () {
-                            data.submit();
-                        });
-                    }*/
-                    datas.push(data);
-                },
-                send: function (e, data) {
-                    $("#files").text(`Uploading ${data.files[0].name}...`);
-                },
-                done: function (e, data) {
-                    $("#files").text(`Uploaded ${++filesUploaded} files.`);
-                },
-                progressall: function (e, data) {
-                    var progress = parseInt(data.loaded / data.total * 100, 10);
-                    $('#progress .progress-bar').css('width', progress + '%');
-                }
-            })
-
-            $("form").hide();
-            $("#chooseFiles").click(function () {
-                $("input[type=file]").click();
-            });
             /*var pp = (async () => {
-    for (let d of datas) {
-        await d.process();
-        await d.submit();
-    }
-})()/*
-        });
+                for (let d of datas) {
+                    await d.process();
+                    await d.submit();
+                }
+            })()/*
     </script>
 </head>
 <body>

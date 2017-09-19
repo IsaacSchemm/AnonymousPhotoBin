@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "noEmitOnError": true,
+    "sourceMap": true,
+    "strictNullChecks": true,
+    "target": "es5"
+  },
+  "files": [
+    "wwwroot/scripts/index.ts"
+  ],
+  "compileOnSave": true
+}
