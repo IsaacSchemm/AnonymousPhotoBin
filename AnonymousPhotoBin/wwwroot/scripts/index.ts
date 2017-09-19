@@ -10,8 +10,9 @@ interface FileData extends JQueryFileInputOptions {
 class FileUploadViewModel {
     readonly files: KnockoutObservableArray<FileData>;
     readonly fileProgress: KnockoutObservable<number>;
+    readonly caption1: KnockoutObservable<string>;
     readonly totalProgress: KnockoutObservable<number>;
-    readonly caption: KnockoutObservable<string>;
+    readonly caption2: KnockoutObservable<string>;
     readonly uploading: KnockoutObservable<boolean>;
 
     readonly fileProgressPercentage: KnockoutComputed<string>;
@@ -22,7 +23,8 @@ class FileUploadViewModel {
         this.files = ko.observableArray();
         this.fileProgress = ko.observable(0);
         this.totalProgress = ko.observable(0);
-        this.caption = ko.observable("");
+        this.caption1 = ko.observable("");
+        this.caption2 = ko.observable("");
         this.uploading = ko.observable(false);
 
         this.fileProgressPercentage = ko.pureComputed(() => `${this.fileProgress() * 100}%`);
@@ -58,26 +60,29 @@ class FileUploadViewModel {
 
         this.uploading(true);
 
-        let filesUploaded = 0;
-        while (true) {
-            const f = this.files.shift();
-            if (!f) break;
+        const files = this.files();
+        this.files([]);
 
+        let filesUploaded = 0;
+        let data: FileData | undefined;
+        for (let data of files) {
             try {
-                this.caption(`Uploading ${f.files[0].name}...`);
-                await f.process();
-                await f.submit();
+                this.caption1(`Uploading ${data.files[0].name}...`);
+
+                await data.process();
+                await data.submit();
 
                 filesUploaded++;
+                this.caption1("");
+                this.caption2(`Uploaded ${filesUploaded} file${filesUploaded == 1 ? "" : "s"}.`);
                 this.totalProgress(filesUploaded / (filesUploaded + this.files().length));
             } catch (e) {
-                this.files.unshift(f);
                 console.error(e);
-                alert("An unknown error occurred.");
+                this.caption1(`An unknown error occurred while uploading ${data!.files[0].name}.`);
+                break;
             }
         }
 
-        this.caption(`Uploaded ${filesUploaded} files.`);
         this.fileProgress(0);
         this.totalProgress(0);
         this.uploading(false);

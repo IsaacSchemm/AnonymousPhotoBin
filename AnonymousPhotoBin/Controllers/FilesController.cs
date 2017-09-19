@@ -33,6 +33,7 @@ namespace AnonymousPhotoBin.Controllers {
         public async Task<object> Post(List<IFormFile> files, string timezone = null) {
             List<UploadedFile> l = new List<UploadedFile>();
             foreach (var file in files) {
+                if (file.FileName == "mark.png") throw new Exception("test");
                 using (var ms = new MemoryStream()) {
                     await file.OpenReadStream().CopyToAsync(ms);
                     byte[] data = ms.ToArray();
