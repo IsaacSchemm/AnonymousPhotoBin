@@ -5,4 +5,3 @@ node_modules
 PublishProfiles
 *.user
 */wwwroot/scripts/*.js*
-appsettings.json
