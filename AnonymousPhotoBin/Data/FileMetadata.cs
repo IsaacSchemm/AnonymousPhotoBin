@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -39,5 +40,7 @@ namespace AnonymousPhotoBin.Data {
 
         [ForeignKey(nameof(JpegThumbnailId))]
         public FileData JpegThumbnail { get; set; }
+
+        public string NewFilename => (TakenAt ?? UploadedAt.UtcDateTime).ToString("yyyyMMdd-hhmmss-") + FileMetadataId.ToString().Substring(0, 8) + Path.GetExtension(OriginalFilename);
     }
 }

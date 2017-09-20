@@ -2,7 +2,6 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
     <title>List Photos</title>
     <script src="//cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"
             integrity="sha256-owX7sroiO/O1a7h3a4X29A1g3QgqdNvijRQ7V5TH45M="
@@ -15,13 +14,6 @@
         }
         a:not(:hover):not(:active) {
             text-decoration: none;
-        }
-        .top-form {
-            text-align: center;
-            margin-bottom: 0.5em;
-        }
-        .top-form > * {
-            padding: 0 0.5em;
         }
         table {
             table-layout: fixed;
@@ -37,20 +29,20 @@
         }
         .file {
             display: inline-block;
+            width: 240px;
             background-color: #f0f0f0;
             margin-left: 10px;
             margin-bottom: 10px;
-            padding: 0 10px;
+            padding: 5px;
             border-radius: 5px;
             border: 1px solid #888;
+            text-align: center;
             cursor: pointer;
         }
         .file > * {
-            display: inline-block;
             vertical-align: middle;
         }
         .file .ck {
-            text-align: center;
             margin: 0;
         }
         .file .ck input[type=checkbox]{
@@ -61,6 +53,14 @@
             height: 120px;
             margin: 0 10px;
         }
+        .file .details {
+            text-align: left;
+        }
+        .file .details > *{
+            white-space: nowrap;
+            overflow-x: hidden;
+            text-overflow: ellipsis;
+        }
         .file.checked, tr.checked {
             background-color: #c0d0e0;
         }
@@ -68,7 +68,7 @@
 </head>
 <body>
     <div id="ko-area" style="display: none" data-bind="style: { display: 'block' }">
-        <div class="top-form">
+        <p align="center">
             <label>
                 Taken after:
                 <input type="datetime-local" id="taken-after" data-bind="textInput: startDate">
@@ -78,14 +78,16 @@
                 <input type="datetime-local" id="taken-before" data-bind="textInput: endDate">
             </label>
             <label>
-                Uploaded by:
+                Taken by:
                 <select data-bind="options: userNames, value: userName" style="max-width: 150px"></select>
             </label>
             <label>
                 Category:
                 <select data-bind="options: categories, value: category" style="max-width: 150px"></select>
             </label>
-            <br />
+        </p>
+
+        <p align="center">
             <label>
                 View as:
                 <select data-bind="value: viewStyle">
@@ -93,10 +95,10 @@
                     <option>Thumbnails</option>
                 </select>
             </label>
-        </div>
+        </p>
 
         <p align="center">
-            The taken date/time of a photo uses the time zone where it was taken. The uploaded date/time is listed in your time zone (<span data-bind="text: myTimeZone"></span>).
+            The taken date/time of a photo uses the time zone where it was taken. The uploaded date/time uses your time zone (<span data-bind="text: myTimeZone"></span>).
         </p>
         
         <!-- ko if: viewStyle() == 'Table' -->
@@ -104,11 +106,11 @@
             <thead>
                 <tr>
                     <th width="32px"></th>
-                    <th width="300px">ID</th>
+                    <th width="300px">Name</th>
                     <th width="100%">Original name</th>
                     <th width="200px">Taken (local time)</th>
                     <th width="200px">Uploaded</th>
-                    <th width="200px">Uploaded by</th>
+                    <th width="200px">Taken by</th>
                     <th width="200px">Category</th>
                 </tr>
             </thead>
@@ -118,7 +120,7 @@
                         <input type="checkbox" style="margin: 0" data-bind="checked: checked, click: defaultAction, clickBubble: false" />
                     </td>
                     <td>
-                        <a href="#" target="_blank" data-bind="text: fileMetadataId, attr: { href: url }, click: defaultAction, clickBubble: false"></a>
+                        <a href="#" target="_blank" data-bind="text: newFilename, attr: { href: url }, click: defaultAction, clickBubble: false"></a>
                     </td>
                     <td data-bind="text: originalFilename"></td>
                     <td data-bind="text: takenAtStr"></td>
@@ -136,11 +138,13 @@
                 <input type="checkbox" data-bind="checked: checked, click: defaultAction, clickBubble: false" />
             </div>
             <img data-bind="attr: { src: thumbnailUrl }" />
-            <div>
-                <div><a href="#" target="_blank" data-bind="text: originalFilename, attr: { href: url }, click: defaultAction, clickBubble: false"></a></div>
+            <div style="margin: 8px 0">
+                <a href="#" target="_blank" data-bind="text: newFilename, attr: { href: url }, click: defaultAction, clickBubble: false"></a>
+            </div>
+            <div class="details">
                 <div>Taken: <span data-bind="text: takenAtStr"></span></div>
                 <div>Uploaded: <span data-bind="text: uploadedAtStr"></span></div>
-                <div>Uploaded by: <span data-bind="text: userName"></span></div>
+                <div>Taken by: <span data-bind="text: userName"></span></div>
                 <div>Category: <span data-bind="text: category"></span></div>
             </div>
         </div>

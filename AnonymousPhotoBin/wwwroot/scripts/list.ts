@@ -8,6 +8,7 @@
     userName: string | null;
     category: string | null;
     contentType: string;
+    newFilename: string;
 }
 
 class FileModel implements IFileMetadata {
@@ -20,6 +21,7 @@ class FileModel implements IFileMetadata {
     readonly userName: string;
     readonly category: string;
     readonly contentType: string;
+    readonly newFilename: string;
 
     readonly url: string;
     readonly thumbnailUrl: string;
@@ -40,6 +42,7 @@ class FileModel implements IFileMetadata {
         this.userName = m.userName || "";
         this.category = m.category || "";
         this.contentType = m.contentType;
+        this.newFilename = m.newFilename;
 
         this.url = `/api/files/${this.fileMetadataId}`;
         this.thumbnailUrl = `/api/thumbnails/${this.fileMetadataId}`;
