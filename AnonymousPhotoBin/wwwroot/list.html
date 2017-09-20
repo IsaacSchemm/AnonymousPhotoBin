@@ -13,12 +13,27 @@
             font-family: sans-serif;
             font-size: 14px;
         }
+        a:not(:hover):not(:active) {
+            text-decoration: none;
+        }
         .top-form {
             text-align: center;
             margin-bottom: 0.5em;
         }
         .top-form > * {
             padding: 0 0.5em;
+        }
+        table {
+            table-layout: fixed;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        td, th {
+            text-align: left;
+            white-space: nowrap;
+            overflow-x: hidden;
+            text-overflow: ellipsis;
+            padding: 8px 0;
         }
         .file {
             display: inline-block;
@@ -28,6 +43,7 @@
             padding: 0 10px;
             border-radius: 5px;
             border: 1px solid #888;
+            cursor: pointer;
         }
         .file > * {
             display: inline-block;
@@ -44,9 +60,8 @@
             max-width: 240px;
             height: 120px;
             margin: 0 10px;
-            cursor: pointer;
         }
-        .file.checked {
+        .file.checked, tr.checked {
             background-color: #c0d0e0;
         }
     </style>
@@ -64,28 +79,72 @@
             </label>
             <label>
                 Uploaded by:
-                <select data-bind="options: userNames, value: userName"></select>
+                <select data-bind="options: userNames, value: userName" style="max-width: 150px"></select>
             </label>
             <label>
                 Category:
-                <select data-bind="options: categories, value: category"></select>
+                <select data-bind="options: categories, value: category" style="max-width: 150px"></select>
+            </label>
+            <br />
+            <label>
+                View as:
+                <select data-bind="value: viewStyle">
+                    <option>Table</option>
+                    <option>Thumbnails</option>
+                </select>
             </label>
         </div>
 
+        <p align="center">
+            The taken date/time of a photo uses the time zone where it was taken. The uploaded date/time is listed in your time zone (<span data-bind="text: myTimeZone"></span>).
+        </p>
+        
+        <!-- ko if: viewStyle() == 'Table' -->
+        <table>
+            <thead>
+                <tr>
+                    <th width="32px"></th>
+                    <th width="300px">ID</th>
+                    <th width="100%">Original name</th>
+                    <th width="200px">Taken (local time)</th>
+                    <th width="200px">Uploaded</th>
+                    <th width="200px">Uploaded by</th>
+                    <th width="200px">Category</th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: displayedFiles">
+                <tr style="cursor: pointer" data-bind="css: { checked: checked }, click: toggle">
+                    <td style="text-align: center">
+                        <input type="checkbox" style="margin: 0" data-bind="checked: checked, click: defaultAction, clickBubble: false" />
+                    </td>
+                    <td>
+                        <a href="#" target="_blank" data-bind="text: fileMetadataId, attr: { href: url }, click: defaultAction, clickBubble: false"></a>
+                    </td>
+                    <td data-bind="text: originalFilename"></td>
+                    <td data-bind="text: takenAtStr"></td>
+                    <td data-bind="text: uploadedAtStr"></td>
+                    <td data-bind="text: userName"></td>
+                    <td data-bind="text: category"></td>
+                </tr>
+            </tbody>
+        </table>
+        <!-- /ko -->
+        <!-- ko if: viewStyle() == 'Thumbnails' -->
         <!-- ko foreach: displayedFiles -->
-        <div class="file" data-bind="css: { checked: checked }">
+        <div class="file" data-bind="css: { checked: checked }, click: toggle">
             <div class="ck">
-                <input type="checkbox" data-bind="checked: checked" />
+                <input type="checkbox" data-bind="checked: checked, click: defaultAction, clickBubble: false" />
             </div>
-            <img data-bind="attr: { src: thumbnailUrl }, click: function () { checked(!checked()) }" />
+            <img data-bind="attr: { src: thumbnailUrl }" />
             <div>
-                <div><a href="#" target="_blank" data-bind="text: originalFilename, attr: { href: url }"></a></div>
+                <div><a href="#" target="_blank" data-bind="text: originalFilename, attr: { href: url }, click: defaultAction, clickBubble: false"></a></div>
                 <div>Taken: <span data-bind="text: takenAtStr"></span></div>
                 <div>Uploaded: <span data-bind="text: uploadedAtStr"></span></div>
                 <div>Uploaded by: <span data-bind="text: userName"></span></div>
                 <div>Category: <span data-bind="text: category"></span></div>
             </div>
         </div>
+        <!-- /ko -->
         <!-- /ko -->
     </div>
 </body>

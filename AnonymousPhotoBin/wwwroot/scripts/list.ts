@@ -48,27 +48,44 @@ class FileModel implements IFileMetadata {
         this.takenAtStr = ko.pureComputed(() => this.takenAt && this.takenAt.toLocaleString());
         this.uploadedAtStr = ko.pureComputed(() => this.uploadedAt && this.uploadedAt.toLocaleString());
     }
+
+    toggle() {
+        this.checked(!this.checked());
+    }
+
+    defaultAction(f: FileModel, e: Event) {
+        return true;
+    }
 }
 
 class ListViewModel {
     readonly files: FileModel[];
+    readonly myTimeZone: string;
 
     readonly startDate: KnockoutObservable<string>;
     readonly endDate: KnockoutObservable<string>;
     readonly userName: KnockoutObservable<string>;
     readonly category: KnockoutObservable<string>;
+    readonly viewStyle: KnockoutObservable<string>;
 
     readonly userNames: KnockoutObservable<string[]>;
     readonly categories: KnockoutObservable<string[]>;
     readonly displayedFiles: KnockoutComputed<FileModel[]>;
 
     constructor(files: IFileMetadata[]) {
-        this.files = files.map(f => new FileModel(f));
+        this.files = files.map(f => new FileModel(f)).sort((a, b) => +(a.takenAt || a.uploadedAt) - +(b.takenAt || b.uploadedAt));
+
+        try {
+            this.myTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        } catch (e) {
+            this.myTimeZone = `UTC + ${new Date().getTimezoneOffset()} minutes`;
+        }
 
         this.startDate = ko.observable("2000-01-01T00:00");
         this.endDate = ko.observable(`${new Date().getFullYear() + 1}-01-01T00:00`);
         this.userName = ko.observable("");
         this.category = ko.observable("");
+        this.viewStyle = ko.observable("Table");
 
         this.userNames = ko.pureComputed(() => this.files.map(f => f.userName).filter((v, i, a) => a.indexOf(v) === i).sort());
         this.categories = ko.pureComputed(() => this.files.map(f => f.category).filter((v, i, a) => a.indexOf(v) === i).sort());
