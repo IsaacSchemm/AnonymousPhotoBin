@@ -4,6 +4,7 @@
   "private": true,
   "devDependencies": {
     "@types/jquery": "^3.2.12",
-    "@types/jquery.fileupload": "^5.40.36"
+    "@types/jquery.fileupload": "^5.40.36",
+    "@types/knockout": "^3.4.45"
   }
 }
