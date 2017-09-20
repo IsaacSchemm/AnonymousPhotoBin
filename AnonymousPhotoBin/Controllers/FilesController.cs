@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.MetaData.Profiles.Exif;
+using System.Net;
+using System.Linq;
 
 namespace AnonymousPhotoBin.Controllers {
     public class FilesController : Controller {
@@ -114,7 +116,7 @@ namespace AnonymousPhotoBin.Controllers {
                         Height = height,
                         TakenAt = takenAtDateTime,
                         UploadedAt = DateTime.UtcNow,
-                        OriginalFilename = file.FileName,
+                        OriginalFilename = Path.GetFileName(file.FileName),
                         Sha256 = SHA256.ComputeHash(data),
                         ContentType = file.ContentType,
                         FileData = new FileData {
@@ -133,6 +135,13 @@ namespace AnonymousPhotoBin.Controllers {
                 }
             }
             return l;
+        }
+
+        [HttpPost]
+        [Route("api/files/legacy")]
+        public async Task<ContentResult> LegacyPost(List<IFormFile> files) {
+            var l = await Post(files);
+            return Content("Files uploaded:\n" + string.Join("\n", l.Select(f => $"{f.name} -> {f.url}")));
         }
 
         public class FileMetadataPatch {
