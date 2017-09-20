@@ -33,12 +33,13 @@ namespace AnonymousPhotoBin.Controllers {
 
         [HttpGet]
         [Route("api/files/{id}")]
-        public async Task<IActionResult> Get(Guid id) {
+        [Route("api/files/{id}/{filename}")]
+        public async Task<IActionResult> Get(Guid id, string filename = null) {
             var photo = await _context.FileMetadata.Include(nameof(FileMetadata.FileData)).FirstOrDefaultAsync(p => p.FileMetadataId == id);
             if (photo == null) {
                 return NotFound();
             } else {
-                return File(photo.FileData.Data, photo.ContentType, photo.NewFilename);
+                return File(photo.FileData.Data, photo.ContentType);
             }
         }
 
@@ -51,7 +52,7 @@ namespace AnonymousPhotoBin.Controllers {
             } else if (photo.JpegThumbnail == null) {
                 return photo.ContentType.StartsWith("image/")
                     ? await Get(id)
-                    : Redirect("http://www-cdr.stanford.edu/%7Epetrie/blank.gif");
+                    : Redirect("/images/blank.gif");
             } else {
                 return File(photo.JpegThumbnail.Data, "image/jpeg");
             }
