@@ -71,9 +71,14 @@ class ListViewModel {
     readonly category: KnockoutObservable<string>;
     readonly viewStyle: KnockoutObservable<string>;
 
+    readonly selectAllChecked: KnockoutObservable<boolean>;
+
+    readonly selectedFiles: KnockoutComputed<FileModel[]>;
+
     readonly userNames: KnockoutObservable<string[]>;
     readonly categories: KnockoutObservable<string[]>;
     readonly displayedFiles: KnockoutComputed<FileModel[]>;
+    readonly undisplayedSelectedFiles: KnockoutComputed<FileModel[]>;
 
     constructor(files: IFileMetadata[]) {
         this.files = files.map(f => new FileModel(f)).sort((a, b) => +(a.takenAt || a.uploadedAt) - +(b.takenAt || b.uploadedAt));
@@ -90,8 +95,21 @@ class ListViewModel {
         this.category = ko.observable("");
         this.viewStyle = ko.observable("Table");
 
-        this.userNames = ko.pureComputed(() => this.files.map(f => f.userName).filter((v, i, a) => a.indexOf(v) === i).sort());
-        this.categories = ko.pureComputed(() => this.files.map(f => f.category).filter((v, i, a) => a.indexOf(v) === i).sort());
+        this.selectAllChecked = ko.observable(false);
+        this.selectAllChecked.subscribe(newValue => {
+            for (const f of this.displayedFiles()) {
+                f.checked(newValue);
+            }
+        });
+
+        this.selectedFiles = ko.pureComputed(() => this.files.filter(f => f.checked()));
+
+        this.userNames = ko.pureComputed(() => [""].concat(this.files.map(f => f.userName))
+            .filter((v, i, a) => a.indexOf(v) === i)
+            .sort());
+        this.categories = ko.pureComputed(() => [""].concat(this.files.map(f => f.category))
+            .filter((v, i, a) => a.indexOf(v) === i)
+            .sort());
         this.displayedFiles = ko.pureComputed(() => this.files.filter(f => {
             if (this.startDate() && new Date(this.startDate()) > (f.takenAt || f.uploadedAt)) return false;
             if (this.endDate() && new Date(this.endDate()) < (f.takenAt || f.uploadedAt)) return false;
@@ -99,6 +117,35 @@ class ListViewModel {
             if (this.category() && f.category != this.category()) return false;
             return true;
         }));
+
+        this.undisplayedSelectedFiles = ko.pureComputed(() => {
+            const displayedFiles = this.displayedFiles();
+            return this.selectedFiles().filter(f => displayedFiles.indexOf(f) < 0);
+        });
+    }
+
+    download() {
+        
+    }
+
+    changeUserName() {
+        const newName = prompt("What \"taken by\" name should be listed for these files?", this.selectedFiles()[0].userName);
+        if (newName != null) {
+
+        }
+    }
+
+    changeCategory() {
+        const newCategory = prompt("What category should these files be part of?", this.selectedFiles()[0].category);
+        if (newCategory != null) {
+
+        }
+    }
+
+    del() {
+        if (confirm(`Are you sure you want to delete ${this.selectedFiles().length} file(s)?`)) {
+
+        }
     }
 }
 

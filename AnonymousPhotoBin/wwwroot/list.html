@@ -98,14 +98,29 @@
         </p>
 
         <p align="center">
-            The taken date/time of a photo uses the time zone where it was taken. The uploaded date/time uses your time zone (<span data-bind="text: myTimeZone"></span>).
+            <span data-bind="text: selectedFiles().length">0</span> file(s) selected.
+            <br />
+            <button data-bind="disable: selectedFiles().length == 0, click: download">
+                Download .zip
+            </button>
+            <button data-bind="disable: selectedFiles().length == 0, click: changeUserName">
+                Change taken by
+            </button>
+            <button data-bind="disable: selectedFiles().length == 0, click: changeCategory">
+                Change category
+            </button>
+            <button data-bind="disable: selectedFiles().length == 0, click: del">
+                Delete
+            </button>
         </p>
         
         <!-- ko if: viewStyle() == 'Table' -->
         <table>
             <thead>
                 <tr>
-                    <th width="32px"></th>
+                    <th width="32px" style="text-align: center">
+                        <input type="checkbox" data-bind="checked: selectAllChecked" />
+                    </th>
                     <th width="300px">Name</th>
                     <th width="100%">Original name</th>
                     <th width="200px">Taken (local time)</th>
@@ -150,6 +165,10 @@
         </div>
         <!-- /ko -->
         <!-- /ko -->
+
+        <p data-bind="if: undisplayedSelectedFiles().length > 0">
+            <span data-bind="text: undisplayedSelectedFiles().length"></span> other file(s) are also selected, but are not shown due to filter settings.
+        </p>
     </div>
 </body>
 </html>
