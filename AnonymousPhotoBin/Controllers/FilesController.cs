@@ -134,7 +134,26 @@ namespace AnonymousPhotoBin.Controllers {
             }
             return l;
         }
-        
+
+        public class FileMetadataPatch {
+            public string UserName { get; set; }
+            public string Category { get; set; }
+        }
+
+        [HttpPatch]
+        [Route("api/files/{id}")]
+        public async Task<StatusCodeResult> Patch(Guid id, [FromBody]FileMetadataPatch patch) {
+            var f = await _context.FileMetadata.FirstOrDefaultAsync(p => p.FileMetadataId == id);
+            if (f == null) {
+                return NotFound();
+            } else {
+                if (patch.UserName != null) f.UserName = patch.UserName;
+                if (patch.Category != null) f.Category = patch.Category;
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
+        }
+
         [HttpDelete]
         [Route("api/files/{id}")]
         public async Task<StatusCodeResult> Delete(Guid id) {

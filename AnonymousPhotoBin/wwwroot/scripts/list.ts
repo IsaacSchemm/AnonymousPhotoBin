@@ -11,15 +11,15 @@
     newFilename: string;
 }
 
-class FileModel implements IFileMetadata {
+class FileModel {
     readonly fileMetadataId: string;
     readonly width: number;
     readonly height: number;
     readonly takenAt: Date | null;
     readonly uploadedAt: Date;
     readonly originalFilename: string;
-    readonly userName: string;
-    readonly category: string;
+    readonly userName: KnockoutObservable<string>;
+    readonly category: KnockoutObservable<string>;
     readonly contentType: string;
     readonly newFilename: string;
 
@@ -39,8 +39,8 @@ class FileModel implements IFileMetadata {
             : null;
         this.uploadedAt = new Date(m.uploadedAt);
         this.originalFilename = m.originalFilename;
-        this.userName = m.userName || "";
-        this.category = m.category || "";
+        this.userName = ko.observable(m.userName || "");
+        this.category = ko.observable(m.category || "");
         this.contentType = m.contentType;
         this.newFilename = m.newFilename;
 
@@ -62,7 +62,7 @@ class FileModel implements IFileMetadata {
 }
 
 class ListViewModel {
-    readonly files: FileModel[];
+    readonly files: KnockoutObservableArray<FileModel>;
     readonly myTimeZone: string;
 
     readonly startDate: KnockoutObservable<string>;
@@ -81,7 +81,9 @@ class ListViewModel {
     readonly undisplayedSelectedFiles: KnockoutComputed<FileModel[]>;
 
     constructor(files: IFileMetadata[]) {
-        this.files = files.map(f => new FileModel(f)).sort((a, b) => +(a.takenAt || a.uploadedAt) - +(b.takenAt || b.uploadedAt));
+        this.files = ko.observableArray(files
+            .map(f => new FileModel(f))
+            .sort((a, b) => +(a.takenAt || a.uploadedAt) - +(b.takenAt || b.uploadedAt)));
 
         try {
             this.myTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -102,19 +104,19 @@ class ListViewModel {
             }
         });
 
-        this.selectedFiles = ko.pureComputed(() => this.files.filter(f => f.checked()));
+        this.selectedFiles = ko.pureComputed(() => this.files().filter(f => f.checked()));
 
-        this.userNames = ko.pureComputed(() => [""].concat(this.files.map(f => f.userName))
+        this.userNames = ko.pureComputed(() => [""].concat(this.files().map(f => f.userName()))
             .filter((v, i, a) => a.indexOf(v) === i)
             .sort());
-        this.categories = ko.pureComputed(() => [""].concat(this.files.map(f => f.category))
+        this.categories = ko.pureComputed(() => [""].concat(this.files().map(f => f.category()))
             .filter((v, i, a) => a.indexOf(v) === i)
             .sort());
-        this.displayedFiles = ko.pureComputed(() => this.files.filter(f => {
+        this.displayedFiles = ko.pureComputed(() => this.files().filter(f => {
             if (this.startDate() && new Date(this.startDate()) > (f.takenAt || f.uploadedAt)) return false;
             if (this.endDate() && new Date(this.endDate()) < (f.takenAt || f.uploadedAt)) return false;
-            if (this.userName() && f.userName != this.userName()) return false;
-            if (this.category() && f.category != this.category()) return false;
+            if (this.userName() && f.userName() != this.userName()) return false;
+            if (this.category() && f.category() != this.category()) return false;
             return true;
         }));
 
@@ -128,23 +130,72 @@ class ListViewModel {
         
     }
 
-    changeUserName() {
-        const newName = prompt("What \"taken by\" name should be listed for these files?", this.selectedFiles()[0].userName);
+    async changeUserName() {
+        const newName = prompt("What \"taken by\" name should be listed for these files?", this.selectedFiles()[0].userName());
         if (newName != null) {
-
+            try {
+                for (const f of this.selectedFiles()) {
+                    const response = await fetch(f.url, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        method: "PATCH",
+                        body: JSON.stringify({ userName: newName })
+                    });
+                    if (Math.floor(response.status / 100) != 2) {
+                        throw new Error(`HTTP response ${response.status} ${response.statusText}`);
+                    }
+                    f.userName(newName);
+                    f.checked(false);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("An unknown error occurred.");
+            }
         }
     }
 
-    changeCategory() {
-        const newCategory = prompt("What category should these files be part of?", this.selectedFiles()[0].category);
+    async changeCategory() {
+        const newCategory = prompt("What category should these files be part of?", this.selectedFiles()[0].category());
         if (newCategory != null) {
-
+            try {
+                for (const f of this.selectedFiles()) {
+                    const response = await fetch(f.url, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        method: "PATCH",
+                        body: JSON.stringify({ category: newCategory })
+                    });
+                    if (Math.floor(response.status / 100) != 2) {
+                        throw new Error(`HTTP response ${response.status} ${response.statusText}`);
+                    }
+                    f.category(newCategory);
+                    f.checked(false);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("An unknown error occurred.");
+            }
         }
     }
 
-    del() {
-        if (confirm(`Are you sure you want to delete ${this.selectedFiles().length} file(s)?`)) {
-
+    async del() {
+        if (confirm(`Are you sure you want to permanently delete ${this.selectedFiles().length} file(s) from the server?`)) {
+            try {
+                for (const f of this.selectedFiles()) {
+                    const response = await fetch(f.url, {
+                        method: "DELETE"
+                    });
+                    if (Math.floor(response.status / 100) != 2) {
+                        throw new Error(`HTTP response ${response.status} ${response.statusText}`);
+                    }
+                    this.files.remove(f);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("An unknown error occurred.");
+            }
         }
     }
 }
