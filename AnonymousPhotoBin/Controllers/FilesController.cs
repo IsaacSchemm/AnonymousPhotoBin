@@ -60,7 +60,7 @@ namespace AnonymousPhotoBin.Controllers {
         
         [HttpPost]
         [Route("api/files")]
-        public async Task<List<FileMetadata>> Post(List<IFormFile> files) {
+        public async Task<List<FileMetadata>> Post(List<IFormFile> files, string userName = null, string category = null) {
             List<FileMetadata> l = new List<FileMetadata>();
             foreach (var file in files) {
                 using (var ms = new MemoryStream()) {
@@ -119,6 +119,8 @@ namespace AnonymousPhotoBin.Controllers {
                             TakenAt = takenAtDateTime,
                             UploadedAt = DateTime.UtcNow,
                             OriginalFilename = Path.GetFileName(file.FileName),
+                            UserName = userName,
+                            Category = category,
                             Sha256 = hash,
                             ContentType = file.ContentType,
                             FileData = new FileData {
@@ -138,8 +140,8 @@ namespace AnonymousPhotoBin.Controllers {
 
         [HttpPost]
         [Route("api/files/legacy")]
-        public async Task<ContentResult> LegacyPost(List<IFormFile> files) {
-            var l = await Post(files);
+        public async Task<ContentResult> LegacyPost(List<IFormFile> files, string userName = null, string category = null) {
+            var l = await Post(files, userName, category);
             return Content("Files uploaded:\n" + string.Join("\n", l.Select(f => $"{f.OriginalFilename} -> {f.Url}")));
         }
 

@@ -42,7 +42,8 @@ class FileUploadViewModel {
             progressall: (e, data) => {
                 this.fileProgress((data.loaded || 0) / (data.total || 0));
             }
-        }).hide();
+        });
+        $("input[type=file], input[type=submit]").hide();
 
         ko.applyBindings(this, document.getElementById("ko-area"));
     }
