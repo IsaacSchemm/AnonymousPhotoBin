@@ -4,15 +4,22 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <title>List Photos</title>
-    <link rel="stylesheet"
-          href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
-          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
-          crossorigin="anonymous">
     <script src="//cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"
             integrity="sha256-owX7sroiO/O1a7h3a4X29A1g3QgqdNvijRQ7V5TH45M="
             crossorigin="anonymous"></script>
     <script src="scripts/list.js"></script>
     <style type="text/css">
+        body {
+            font-family: sans-serif;
+            font-size: 14px;
+        }
+        .top-form {
+            text-align: center;
+            margin-bottom: 0.5em;
+        }
+        .top-form > * {
+            padding: 0 0.5em;
+        }
         .file {
             display: inline-block;
             background-color: #f0f0f0;
@@ -21,7 +28,6 @@
             padding: 0 10px;
             border-radius: 5px;
             border: 1px solid #888;
-            cursor: pointer;
         }
         .file > * {
             display: inline-block;
@@ -38,6 +44,7 @@
             max-width: 240px;
             height: 120px;
             margin: 0 10px;
+            cursor: pointer;
         }
         .file.checked {
             background-color: #c0d0e0;
@@ -45,26 +52,41 @@
     </style>
 </head>
 <body>
-    <div id="container">
-        <div id="ko-area" style="display: none" data-bind="style: { display: 'block' }">
-            <!-- ko foreach: files -->
-            <div class="file" data-bind="css: { checked: checked }, click: function () { checked(!checked()) }">
-                <div class="ck">
-                    <input type="checkbox" data-bind="checked: checked" />
-                </div>
-                <div>
-                    <img data-bind="attr: { src: thumbnailUrl }" />
-                </div>
-                <div>
-                    <div>Taken: <span data-bind="text: takenAt"></span></div>
-                    <div>Uploaded: <span data-bind="text: uploadedAt"></span></div>
-                    <div>Name: <span data-bind="text: originalFilename"></span></div>
-                    <div>Uploaded by: <span data-bind="text: userName"></span></div>
-                    <div>Category: <span data-bind="text: category"></span></div>
-                </div>
-            </div>
-            <!-- /ko -->
+    <div id="ko-area" style="display: none" data-bind="style: { display: 'block' }">
+        <div class="top-form">
+            <label>
+                Taken after:
+                <input type="datetime-local" id="taken-after" data-bind="textInput: startDate">
+            </label>
+            <label>
+                Taken before:
+                <input type="datetime-local" id="taken-before" data-bind="textInput: endDate">
+            </label>
+            <label>
+                Uploaded by:
+                <select data-bind="options: userNames, value: userName"></select>
+            </label>
+            <label>
+                Category:
+                <select data-bind="options: categories, value: category"></select>
+            </label>
         </div>
+
+        <!-- ko foreach: displayedFiles -->
+        <div class="file" data-bind="css: { checked: checked }">
+            <div class="ck">
+                <input type="checkbox" data-bind="checked: checked" />
+            </div>
+            <img data-bind="attr: { src: thumbnailUrl }, click: function () { checked(!checked()) }" />
+            <div>
+                <div><a href="#" target="_blank" data-bind="text: originalFilename, attr: { href: url }"></a></div>
+                <div>Taken: <span data-bind="text: takenAtStr"></span></div>
+                <div>Uploaded: <span data-bind="text: uploadedAtStr"></span></div>
+                <div>Uploaded by: <span data-bind="text: userName"></span></div>
+                <div>Category: <span data-bind="text: category"></span></div>
+            </div>
+        </div>
+        <!-- /ko -->
     </div>
 </body>
 </html>
