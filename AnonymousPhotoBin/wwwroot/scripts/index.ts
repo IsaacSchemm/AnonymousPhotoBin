@@ -63,6 +63,8 @@ class FileUploadViewModel {
 
         let filesUploaded = 0;
         let data: FileData | undefined;
+        this.caption1("");
+        this.caption2("");
         for (let data of files) {
             try {
                 this.caption1(`Uploading ${data.files[0].name}...`);

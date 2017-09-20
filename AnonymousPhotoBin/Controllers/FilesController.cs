@@ -66,64 +66,70 @@ namespace AnonymousPhotoBin.Controllers {
                     await file.OpenReadStream().CopyToAsync(ms);
                     byte[] data = ms.ToArray();
 
-                    int? width = null;
-                    int? height = null;
-                    string takenAt = null;
-                    FileData thumbnail = null;
-                    try {
-                        using (var image = Image.Load(data)) {
-                            width = image.Width;
-                            height = image.Height;
-                            takenAt = image.MetaData?.ExifProfile?.GetValue(ExifTag.DateTimeOriginal)?.Value?.ToString();
+                    byte[] hash = SHA256.ComputeHash(data);
+                    var existing = await _context.FileMetadata.FirstOrDefaultAsync(f2 => f2.Sha256 == hash);
+                    if (existing != null) {
+                        l.Add(existing);
+                    } else {
+                        int? width = null;
+                        int? height = null;
+                        string takenAt = null;
+                        FileData thumbnail = null;
+                        try {
+                            using (var image = Image.Load(data)) {
+                                width = image.Width;
+                                height = image.Height;
+                                takenAt = image.MetaData?.ExifProfile?.GetValue(ExifTag.DateTimeOriginal)?.Value?.ToString();
 
-                            image.Mutate(x => x.AutoOrient());
+                                if (data.Length > 1024 * 16) {
+                                    image.Mutate(x => x.AutoOrient());
 
-                            if (image.Width > MAX_WIDTH || image.Height > MAX_HEIGHT) {
-                                double ratio = (double)image.Width / image.Height;
-                                int newW, newH;
-                                if (ratio > (double)MAX_WIDTH / MAX_HEIGHT) {
-                                    // wider
-                                    newW = MAX_WIDTH;
-                                    newH = (int)(newW / ratio);
-                                } else {
-                                    // taller
-                                    newH = MAX_HEIGHT;
-                                    newW = (int)(newH * ratio);
-                                }
-                                image.Mutate(x => x.Resize(newW, newH));
+                                    double ratio = (double)image.Width / image.Height;
+                                    int newW, newH;
+                                    if (ratio > (double)MAX_WIDTH / MAX_HEIGHT) {
+                                        // wider
+                                        newW = MAX_WIDTH;
+                                        newH = (int)(newW / ratio);
+                                    } else {
+                                        // taller
+                                        newH = MAX_HEIGHT;
+                                        newW = (int)(newH * ratio);
+                                    }
+                                    image.Mutate(x => x.Resize(newW, newH));
 
-                                using (var jpegThumb = new MemoryStream()) {
-                                    image.SaveAsJpeg(jpegThumb);
-                                    thumbnail = new FileData {
-                                        Data = jpegThumb.ToArray()
-                                    };
+                                    using (var jpegThumb = new MemoryStream()) {
+                                        image.SaveAsJpeg(jpegThumb);
+                                        thumbnail = new FileData {
+                                            Data = jpegThumb.ToArray()
+                                        };
+                                    }
                                 }
                             }
+                        } catch (NotSupportedException) { }
+
+                        DateTime? takenAtDateTime = null;
+                        if (DateTime.TryParseExact(takenAt, "yyyy:MM:dd HH:mm:ss", null, DateTimeStyles.AssumeLocal, out DateTime dt)) {
+                            takenAtDateTime = dt;
                         }
-                    } catch (NotSupportedException) { }
 
-                    DateTime? takenAtDateTime = null;
-                    if (DateTime.TryParseExact(takenAt, "yyyy:MM:dd HH:mm:ss", null, DateTimeStyles.AssumeLocal, out DateTime dt)) {
-                        takenAtDateTime = dt;
+                        FileMetadata f = new FileMetadata {
+                            Width = width,
+                            Height = height,
+                            TakenAt = takenAtDateTime,
+                            UploadedAt = DateTime.UtcNow,
+                            OriginalFilename = Path.GetFileName(file.FileName),
+                            Sha256 = hash,
+                            ContentType = file.ContentType,
+                            FileData = new FileData {
+                                Data = data
+                            },
+                            JpegThumbnail = thumbnail
+                        };
+                        _context.FileMetadata.Add(f);
+                        await _context.SaveChangesAsync();
+
+                        l.Add(f);
                     }
-
-                    FileMetadata f = new FileMetadata {
-                        Width = width,
-                        Height = height,
-                        TakenAt = takenAtDateTime,
-                        UploadedAt = DateTime.UtcNow,
-                        OriginalFilename = Path.GetFileName(file.FileName),
-                        Sha256 = SHA256.ComputeHash(data),
-                        ContentType = file.ContentType,
-                        FileData = new FileData {
-                            Data = data
-                        },
-                        JpegThumbnail = thumbnail
-                    };
-                    _context.FileMetadata.Add(f);
-                    await _context.SaveChangesAsync();
-
-                    l.Add(f);
                 }
             }
             return l;
