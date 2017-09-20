@@ -41,6 +41,10 @@ namespace AnonymousPhotoBin.Data {
         [ForeignKey(nameof(JpegThumbnailId))]
         public FileData JpegThumbnail { get; set; }
 
+        public string Url => $"/api/files/{this.FileMetadataId}";
+
+        public string ThumbnailUrl => $"/api/thumbnails/{this.FileMetadataId}";
+
         public string NewFilename => (TakenAt ?? UploadedAt.UtcDateTime).ToString("yyyyMMdd-hhmmss-") + FileMetadataId.ToString().Substring(0, 8) + Path.GetExtension(OriginalFilename);
     }
 }

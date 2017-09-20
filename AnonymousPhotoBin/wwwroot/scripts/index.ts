@@ -3,19 +3,13 @@
     submit: () => JQueryPromise<any>;
 }
 
-interface UploadedFileResult {
-    url: string;
-    thumbnailUrl: string;
-    name: string;
-}
-
 class FileUploadViewModel {
     readonly files: KnockoutObservableArray<FileData>;
     readonly fileProgress: KnockoutObservable<number>;
     readonly caption1: KnockoutObservable<string | null>;
     readonly totalProgress: KnockoutObservable<number>;
     readonly caption2: KnockoutObservable<string | null>;
-    readonly uploaded: KnockoutObservableArray<UploadedFileResult>;
+    readonly uploaded: KnockoutObservableArray<IFileMetadata>;
     readonly uploading: KnockoutObservable<boolean>;
 
     readonly fileProgressPercentage: KnockoutComputed<string>;
@@ -74,12 +68,10 @@ class FileUploadViewModel {
                 this.caption1(`Uploading ${data.files[0].name}...`);
 
                 await data.process();
-                let result = await data.submit();
-
-                if (result) {
-                    for (const f of result) {
-                        this.uploaded.unshift(f);
-                    }
+                let result: IFileMetadata[] = await data.submit();
+                
+                for (const f of result) {
+                    this.uploaded.unshift(f);
                 }
 
                 filesUploaded++;

@@ -1,17 +1,4 @@
-﻿interface IFileMetadata {
-    fileMetadataId: string;
-    width: number;
-    height: number;
-    takenAt: Date | string | null;
-    uploadedAt: Date | string;
-    originalFilename: string;
-    userName: string | null;
-    category: string | null;
-    contentType: string;
-    newFilename: string;
-}
-
-class FileModel {
+﻿class FileModel {
     readonly fileMetadataId: string;
     readonly width: number;
     readonly height: number;
@@ -21,10 +8,11 @@ class FileModel {
     readonly userName: KnockoutObservable<string>;
     readonly category: KnockoutObservable<string>;
     readonly contentType: string;
-    readonly newFilename: string;
 
     readonly url: string;
     readonly thumbnailUrl: string;
+    readonly newFilename: string;
+
     checked: KnockoutObservable<boolean>;
 
     readonly takenAtStr: KnockoutComputed<string | null>;
@@ -44,8 +32,8 @@ class FileModel {
         this.contentType = m.contentType;
         this.newFilename = m.newFilename;
 
-        this.url = `/api/files/${this.fileMetadataId}`;
-        this.thumbnailUrl = `/api/thumbnails/${this.fileMetadataId}`;
+        this.url = m.url;
+        this.thumbnailUrl = m.thumbnailUrl;
         this.checked = ko.observable(false);
 
         this.takenAtStr = ko.pureComputed(() => this.takenAt && this.takenAt.toLocaleString());

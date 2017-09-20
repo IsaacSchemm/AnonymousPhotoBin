@@ -56,15 +56,11 @@ namespace AnonymousPhotoBin.Controllers {
                 return File(photo.JpegThumbnail.Data, "image/jpeg");
             }
         }
-
-        public class UploadedFile {
-            public string url, thumbnailUrl, name;
-        }
-
+        
         [HttpPost]
         [Route("api/files")]
-        public async Task<List<UploadedFile>> Post(List<IFormFile> files) {
-            List<UploadedFile> l = new List<UploadedFile>();
+        public async Task<List<FileMetadata>> Post(List<IFormFile> files) {
+            List<FileMetadata> l = new List<FileMetadata>();
             foreach (var file in files) {
                 using (var ms = new MemoryStream()) {
                     await file.OpenReadStream().CopyToAsync(ms);
@@ -127,11 +123,7 @@ namespace AnonymousPhotoBin.Controllers {
                     _context.FileMetadata.Add(f);
                     await _context.SaveChangesAsync();
 
-                    l.Add(new UploadedFile {
-                        url = $"/api/files/{f.FileMetadataId}",
-                        thumbnailUrl = $"/api/thumbnails/{f.FileMetadataId}",
-                        name = file.FileName
-                    });
+                    l.Add(f);
                 }
             }
             return l;
@@ -141,7 +133,7 @@ namespace AnonymousPhotoBin.Controllers {
         [Route("api/files/legacy")]
         public async Task<ContentResult> LegacyPost(List<IFormFile> files) {
             var l = await Post(files);
-            return Content("Files uploaded:\n" + string.Join("\n", l.Select(f => $"{f.name} -> {f.url}")));
+            return Content("Files uploaded:\n" + string.Join("\n", l.Select(f => $"{f.OriginalFilename} -> {f.Url}")));
         }
 
         public class FileMetadataPatch {
