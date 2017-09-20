@@ -7,9 +7,18 @@
           href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
           integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
           crossorigin="anonymous">
+    <!-- Promise and fetch polyfills (IE11, etc.) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-promise/4.1.1/es6-promise.auto.min.js"
+            integrity="sha256-OI3N9zCKabDov2rZFzl8lJUXCcP7EmsGcGoP6DMXQCo="
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"
+            integrity="sha256-aB35laj7IZhLTx58xw/Gm1EKOoJJKZt6RY+bH1ReHxs="
+            crossorigin="anonymous"></script>
+    <!-- Knockout -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"
             integrity="sha256-owX7sroiO/O1a7h3a4X29A1g3QgqdNvijRQ7V5TH45M="
             crossorigin="anonymous"></script>
+    <!-- Main script -->
     <script src="scripts/list.js"></script>
     <style type="text/css">
         input[type=date].form-control, input[type=time].form-control, input[type=datetime-local].form-control, input[type=month].form-control {
@@ -97,6 +106,9 @@
                 Category:
                 <select class="form-control" data-bind="options: categories, value: category" style="max-width: 150px"></select>
             </label>
+            <button class="btn btn-secondary" data-bind="click: resetFilters">
+                Reset
+            </button>
         </p>
 
         <p align="center">
@@ -178,7 +190,7 @@
         <!-- /ko -->
         <!-- /ko -->
 
-        <p data-bind="if: undisplayedSelectedFiles().length > 0">
+        <p align="center" data-bind="if: undisplayedSelectedFiles().length > 0">
             <span data-bind="text: undisplayedSelectedFiles().length"></span> other file(s) are also selected, but are not shown due to filter settings.
         </p>
     </div>

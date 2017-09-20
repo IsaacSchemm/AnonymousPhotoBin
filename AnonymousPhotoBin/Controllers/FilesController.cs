@@ -61,7 +61,7 @@ namespace AnonymousPhotoBin.Controllers {
 
         [HttpPost]
         [Route("api/files")]
-        public async Task<List<UploadedFile>> Post(List<IFormFile> files, string timezone = null) {
+        public async Task<List<UploadedFile>> Post(List<IFormFile> files) {
             List<UploadedFile> l = new List<UploadedFile>();
             foreach (var file in files) {
                 using (var ms = new MemoryStream()) {

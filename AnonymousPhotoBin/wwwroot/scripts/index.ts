@@ -1,8 +1,4 @@
-﻿///<reference path="../../node_modules/@types/jquery/index.d.ts"/>
-///<reference path="../../node_modules/@types/jquery.fileupload/index.d.ts"/>
-///<reference path="../../node_modules/@types/knockout/index.d.ts"/>
-
-interface FileData extends JQueryFileInputOptions {
+﻿interface FileData extends JQueryFileInputOptions {
     process: () => JQueryPromise<void>;
     submit: () => JQueryPromise<any>;
 }
@@ -107,15 +103,8 @@ class FileUploadViewModel {
     }
 }
 
-$(() => {
-    try {
-        let e = document.querySelector("input[name=timezone]");
-        if (e instanceof HTMLInputElement) {
-            e.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        }
-    } catch (e) {
-        console.error(e);
-    }
-
-    new FileUploadViewModel();
-});
+if ("$" in window) {
+    $(() => {
+        new FileUploadViewModel();
+    });
+}

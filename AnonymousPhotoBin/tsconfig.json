@@ -5,9 +5,11 @@
     "noEmitOnError": true,
     "sourceMap": true,
     "strictNullChecks": true,
-    "target": "es6"
+    "target": "es5",
+    "lib": ["dom", "es5", "scripthost", "es2015.promise"]
   },
   "files": [
+    "wwwroot/scripts/common.ts",
     "wwwroot/scripts/index.ts",
     "wwwroot/scripts/list.ts"
   ],

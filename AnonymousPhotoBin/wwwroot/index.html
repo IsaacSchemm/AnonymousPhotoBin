@@ -20,18 +20,26 @@
             margin: 20px auto 0;
         }
     </style>
+    <!-- Promise polyfill (IE11, etc.) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-promise/4.1.1/es6-promise.auto.min.js"
+            integrity="sha256-OI3N9zCKabDov2rZFzl8lJUXCcP7EmsGcGoP6DMXQCo="
+            crossorigin="anonymous"></script>
+    <!-- jQuery and jQuery UI (used by file upload plugin) -->
     <script src="//code.jquery.com/jquery-3.2.1.min.js"
             integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
             crossorigin="anonymous"></script>
     <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"
             integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
             crossorigin="anonymous"></script>
+    <!-- File upload plugin -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.19.1/js/jquery.fileupload.js"
             integrity="sha256-JBs/UTfhY8RkCwyn7zMxTDLcINzVqW/RzOqwdaPgh34="
             crossorigin="anonymous"></script>
+    <!-- Knockout -->
     <script src="//cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"
             integrity="sha256-owX7sroiO/O1a7h3a4X29A1g3QgqdNvijRQ7V5TH45M="
             crossorigin="anonymous"></script>
+    <!-- Main script -->
     <script src="scripts/index.js"></script>
 </head>
 <body>
@@ -39,7 +47,6 @@
         <h1>Upload Files</h1>
         <form method="post" enctype="multipart/form-data" action="/api/files">
             <input type="file" name="files" multiple />
-            <input type="hidden" name="timezone" value="" />
             <div>&nbsp;</div>
             <input type="submit" class="btn btn-primary" value="Upload Files" />
         </form>

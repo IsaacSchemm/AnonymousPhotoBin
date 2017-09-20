@@ -96,6 +96,7 @@ class ListViewModel {
         this.userName = ko.observable("");
         this.category = ko.observable("");
         this.viewStyle = ko.observable("Table");
+        this.resetFilters();
 
         this.selectAllChecked = ko.observable(false);
         this.selectAllChecked.subscribe(newValue => {
@@ -124,6 +125,13 @@ class ListViewModel {
             const displayedFiles = this.displayedFiles();
             return this.selectedFiles().filter(f => displayedFiles.indexOf(f) < 0);
         });
+    }
+
+    resetFilters() {
+        this.startDate("2000-01-01T00:00");
+        this.endDate(`${new Date().getFullYear() + 1}-01-01T00:00`);
+        this.userName("");
+        this.category("");
     }
 
     download() {
