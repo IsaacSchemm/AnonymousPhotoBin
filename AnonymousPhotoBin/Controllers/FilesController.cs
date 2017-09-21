@@ -148,6 +148,24 @@ namespace AnonymousPhotoBin.Controllers {
             return Content("Files uploaded:\n" + string.Join("\n", l.Select(f => $"{f.OriginalFilename} -> {f.Url}")));
         }
 
+        private IActionResult BadRequestIfPasswordInvalid() {
+            string password = _configuration["FileManagementPassword"];
+            if (password == null) {
+                return BadRequest("FileManagementPassword is not set. Please set in appsettings.json, user secrets file, or Azure web app settings.");
+            }
+            if (!Request.Headers["X-FileManagementPassword"].Contains(password)) {
+                return BadRequest("X-FileManagementPassword header is incorrect or missing.");
+            }
+
+            return null;
+        }
+
+        [HttpGet]
+        [Route("api/password/check")]
+        public IActionResult CheckPassword() {
+            return BadRequestIfPasswordInvalid() ?? NoContent();
+        }
+
         public class FileMetadataPatch {
             public string UserName { get; set; }
             public string Category { get; set; }
@@ -157,13 +175,8 @@ namespace AnonymousPhotoBin.Controllers {
         [Route("api/files/{id}")]
         [Route("api/files/{id}/{filename}")]
         public async Task<IActionResult> Patch(Guid id, [FromBody]FileMetadataPatch patch) {
-            string password = _configuration["FileManagementPassword"];
-            if (password == null) {
-                return BadRequest("FileManagementPassword is not set. Please set in appsettings.json, user secrets file, or Azure web app settings.");
-            }
-            if (!Request.Headers["X-FileManagementPassword"].Contains(password)) {
-                return BadRequest("X-FileManagementPassword header is incorrect or missing.");
-            }
+            var r = BadRequestIfPasswordInvalid();
+            if (r != null) return r;
 
             var f = await _context.FileMetadata.FirstOrDefaultAsync(p => p.FileMetadataId == id);
             if (f == null) {
@@ -180,13 +193,8 @@ namespace AnonymousPhotoBin.Controllers {
         [Route("api/files/{id}")]
         [Route("api/files/{id}/{filename}")]
         public async Task<IActionResult> Delete(Guid id) {
-            string password = _configuration["FileManagementPassword"];
-            if (password == null) {
-                return StatusCode(500, "FileManagementPassword is not set. Please set it in either appsettings.json, user secrets file, or Azure web app settings.");
-            }
-            if (!Request.Headers["X-FileManagementPassword"].Contains(password)) {
-                return BadRequest("X-FileManagementPassword header is incorrect or missing.");
-            }
+            var r = BadRequestIfPasswordInvalid();
+            if (r != null) return r;
 
             var f = await _context.FileMetadata.FirstOrDefaultAsync(p => p.FileMetadataId == id);
             if (f == null) {

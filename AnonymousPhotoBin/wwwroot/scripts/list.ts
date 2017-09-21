@@ -68,6 +68,8 @@ class ListViewModel {
     readonly displayedFiles: KnockoutComputed<FileModel[]>;
     readonly undisplayedSelectedFiles: KnockoutComputed<FileModel[]>;
 
+    private password: string | null;
+
     constructor(files: IFileMetadata[]) {
         this.files = ko.observableArray(files
             .map(f => new FileModel(f))
@@ -114,6 +116,27 @@ class ListViewModel {
             const displayedFiles = this.displayedFiles();
             return this.selectedFiles().filter(f => displayedFiles.indexOf(f) < 0);
         });
+
+        this.password = null;
+    }
+
+    private async getPassword() {
+        if (this.password == null) {
+            const p = prompt("Enter the file management password to make changes.");
+            if (p != null) {
+                const response = await fetch("/api/password/check", {
+                    headers: { "X-FileManagementPassword": p },
+                    method: "GET"
+                });
+                if (Math.floor(response.status / 100) == 2) {
+                    this.password = p;
+                } else {
+                    console.error(`${response.status} ${response.statusText}: ${await response.text()}`);
+                    alert(response.status == 400 ? "The password is not valid." : "An unknown error occurred.");
+                }
+            }
+        }
+        return this.password;
     }
 
     resetFilters() {
@@ -128,6 +151,7 @@ class ListViewModel {
     }
 
     async changeUserName() {
+        if (await this.getPassword() == null) return;
         const newName = prompt("What \"taken by\" name should be listed for these files?", this.selectedFiles()[0].userName());
         if (newName != null) {
             try {
@@ -135,7 +159,7 @@ class ListViewModel {
                     const response = await fetch(f.url, {
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-FileManagementPassword': prompt("Enter the file management password to make changes.")
+                            'X-FileManagementPassword': await this.getPassword()
                         },
                         method: "PATCH",
                         body: JSON.stringify({ userName: newName })
@@ -154,6 +178,7 @@ class ListViewModel {
     }
 
     async changeCategory() {
+        if (await this.getPassword() == null) return;
         const newCategory = prompt("What category should these files be part of?", this.selectedFiles()[0].category());
         if (newCategory != null) {
             try {
@@ -161,7 +186,7 @@ class ListViewModel {
                     const response = await fetch(f.url, {
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-FileManagementPassword': prompt("Enter the file management password to make changes.")
+                            'X-FileManagementPassword': await this.getPassword()
                         },
                         method: "PATCH",
                         body: JSON.stringify({ category: newCategory })
@@ -180,12 +205,13 @@ class ListViewModel {
     }
 
     async del() {
+        if (await this.getPassword() == null) return;
         if (confirm(`Are you sure you want to permanently delete ${this.selectedFiles().length} file(s) from the server?`)) {
             try {
                 for (const f of this.selectedFiles()) {
                     const response = await fetch(f.url, {
                         headers: {
-                            'X-FileManagementPassword': prompt("Enter the file management password to make changes.")
+                            'X-FileManagementPassword': await this.getPassword()
                         },
                         method: "DELETE"
                     });
