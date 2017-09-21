@@ -40,6 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <TypeScriptCompile Include="wwwroot\scripts\modals.ts" />
     <TypeScriptCompile Include="wwwroot\scripts\list.ts" />
   </ItemGroup>
 

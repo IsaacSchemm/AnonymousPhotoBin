@@ -122,7 +122,7 @@ class ListViewModel {
 
     private async getPassword() {
         if (this.password == null) {
-            const p = prompt("Enter the file management password to make changes.");
+            const p = await promptAsync("Enter the file management password to make changes.");
             if (p != null) {
                 const response = await fetch("/api/password/check", {
                     headers: { "X-FileManagementPassword": p },
@@ -132,7 +132,7 @@ class ListViewModel {
                     this.password = p;
                 } else {
                     console.error(`${response.status} ${response.statusText}: ${await response.text()}`);
-                    alert(response.status == 400 ? "The password is not valid." : "An unknown error occurred.");
+                    await alertAsync(response.status == 400 ? "The password is not valid." : "An unknown error occurred.");
                 }
             }
         }
@@ -152,7 +152,7 @@ class ListViewModel {
 
     async changeUserName() {
         if (await this.getPassword() == null) return;
-        const newName = prompt("What \"taken by\" name should be listed for these files?", this.selectedFiles()[0].userName());
+        const newName = await promptAsync("What \"taken by\" name should be listed for these files?", this.selectedFiles()[0].userName());
         if (newName != null) {
             try {
                 for (const f of this.selectedFiles()) {
@@ -172,14 +172,14 @@ class ListViewModel {
                 }
             } catch (e) {
                 console.error(e);
-                alert("An unknown error occurred.");
+                await alertAsync("An unknown error occurred.");
             }
         }
     }
 
     async changeCategory() {
         if (await this.getPassword() == null) return;
-        const newCategory = prompt("What category should these files be part of?", this.selectedFiles()[0].category());
+        const newCategory = await promptAsync("What category should these files be part of?", this.selectedFiles()[0].category());
         if (newCategory != null) {
             try {
                 for (const f of this.selectedFiles()) {
@@ -199,14 +199,14 @@ class ListViewModel {
                 }
             } catch (e) {
                 console.error(e);
-                alert("An unknown error occurred.");
+                await alertAsync("An unknown error occurred.");
             }
         }
     }
 
     async del() {
         if (await this.getPassword() == null) return;
-        if (confirm(`Are you sure you want to permanently delete ${this.selectedFiles().length} file(s) from the server?`)) {
+        if (await confirmAsync(`Are you sure you want to permanently delete ${this.selectedFiles().length} file(s) from the server?`)) {
             try {
                 for (const f of this.selectedFiles()) {
                     const response = await fetch(f.url, {
@@ -222,7 +222,7 @@ class ListViewModel {
                 }
             } catch (e) {
                 console.error(e);
-                alert("An unknown error occurred.");
+                await alertAsync("An unknown error occurred.");
             }
         }
     }
