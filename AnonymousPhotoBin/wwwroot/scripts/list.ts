@@ -86,7 +86,7 @@ class ListViewModel {
         this.userName = ko.observable("");
         this.category = ko.observable("");
         this.resetFilters();
-        
+
         this.viewStyle = ko.observable("table");
 
         this.selectAllChecked = ko.observable(false);
@@ -147,7 +147,21 @@ class ListViewModel {
     }
 
     download() {
-        
+
+    }
+
+    private async fetchOrError(input: RequestInfo, init?: RequestInit) {
+        const response = await fetch(input, {
+            ...init,
+            headers: {
+                'X-FileManagementPassword': await this.getPassword(),
+                ...(init ? init.headers : {})
+            }
+        });
+        if (Math.floor(response.status / 100) != 2) {
+            throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`);
+        }
+        return response;
     }
 
     async changeUserName() {
@@ -156,17 +170,13 @@ class ListViewModel {
         if (newName != null) {
             try {
                 for (const f of this.selectedFiles()) {
-                    const response = await fetch(f.url, {
+                    const response = await this.fetchOrError(f.url, {
                         headers: {
-                            'Content-Type': 'application/json',
-                            'X-FileManagementPassword': await this.getPassword()
+                            'Content-Type': 'application/json'
                         },
                         method: "PATCH",
                         body: JSON.stringify({ userName: newName })
                     });
-                    if (Math.floor(response.status / 100) != 2) {
-                        throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`);
-                    }
                     f.userName(newName);
                     f.checked(false);
                 }
@@ -183,17 +193,13 @@ class ListViewModel {
         if (newCategory != null) {
             try {
                 for (const f of this.selectedFiles()) {
-                    const response = await fetch(f.url, {
+                    const response = await this.fetchOrError(f.url, {
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-FileManagementPassword': await this.getPassword()
                         },
                         method: "PATCH",
                         body: JSON.stringify({ category: newCategory })
                     });
-                    if (Math.floor(response.status / 100) != 2) {
-                        throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`);
-                    }
                     f.category(newCategory);
                     f.checked(false);
                 }
@@ -209,15 +215,9 @@ class ListViewModel {
         if (await confirmAsync(`Are you sure you want to permanently delete ${this.selectedFiles().length} file(s) from the server?`)) {
             try {
                 for (const f of this.selectedFiles()) {
-                    const response = await fetch(f.url, {
-                        headers: {
-                            'X-FileManagementPassword': await this.getPassword()
-                        },
+                    const response = await this.fetchOrError(f.url, {
                         method: "DELETE"
                     });
-                    if (Math.floor(response.status / 100) != 2) {
-                        throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`);
-                    }
                     this.files.remove(f);
                 }
             } catch (e) {
