@@ -38,6 +38,7 @@ namespace AnonymousPhotoBin
             services.AddDbContext<PhotoBinDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
+            services.AddSingleton<IConfiguration>(Configuration);
             services.AddMvc();
         }
 

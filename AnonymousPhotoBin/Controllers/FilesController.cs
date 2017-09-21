@@ -12,6 +12,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.MetaData.Profiles.Exif;
 using System.Net;
 using System.Linq;
+using Microsoft.Extensions.Configuration;
 
 namespace AnonymousPhotoBin.Controllers {
     public class FilesController : Controller {
@@ -19,10 +20,12 @@ namespace AnonymousPhotoBin.Controllers {
         private static int MAX_WIDTH = 320;
         private static int MAX_HEIGHT = 160;
 
+        private readonly IConfiguration _configuration;
         private readonly PhotoBinDbContext _context;
 
-        public FilesController(PhotoBinDbContext context) {
+        public FilesController(PhotoBinDbContext context, IConfiguration configuration) {
             _context = context;
+            _configuration = configuration;
         }
         
         [HttpGet]
@@ -152,7 +155,16 @@ namespace AnonymousPhotoBin.Controllers {
 
         [HttpPatch]
         [Route("api/files/{id}")]
-        public async Task<StatusCodeResult> Patch(Guid id, [FromBody]FileMetadataPatch patch) {
+        [Route("api/files/{id}/{filename}")]
+        public async Task<IActionResult> Patch(Guid id, [FromBody]FileMetadataPatch patch) {
+            string password = _configuration["FileManagementPassword"];
+            if (password == null) {
+                return BadRequest("FileManagementPassword is not set. Please set in appsettings.json, user secrets file, or Azure web app settings.");
+            }
+            if (!Request.Headers["X-FileManagementPassword"].Contains(password)) {
+                return BadRequest("X-FileManagementPassword header is incorrect or missing.");
+            }
+
             var f = await _context.FileMetadata.FirstOrDefaultAsync(p => p.FileMetadataId == id);
             if (f == null) {
                 return NotFound();
@@ -166,7 +178,16 @@ namespace AnonymousPhotoBin.Controllers {
 
         [HttpDelete]
         [Route("api/files/{id}")]
-        public async Task<StatusCodeResult> Delete(Guid id) {
+        [Route("api/files/{id}/{filename}")]
+        public async Task<IActionResult> Delete(Guid id) {
+            string password = _configuration["FileManagementPassword"];
+            if (password == null) {
+                return StatusCode(500, "FileManagementPassword is not set. Please set it in either appsettings.json, user secrets file, or Azure web app settings.");
+            }
+            if (!Request.Headers["X-FileManagementPassword"].Contains(password)) {
+                return BadRequest("X-FileManagementPassword header is incorrect or missing.");
+            }
+
             var f = await _context.FileMetadata.FirstOrDefaultAsync(p => p.FileMetadataId == id);
             if (f == null) {
                 return NotFound();

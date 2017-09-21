@@ -134,13 +134,14 @@ class ListViewModel {
                 for (const f of this.selectedFiles()) {
                     const response = await fetch(f.url, {
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'X-FileManagementPassword': prompt("Enter the file management password to make changes.")
                         },
                         method: "PATCH",
                         body: JSON.stringify({ userName: newName })
                     });
                     if (Math.floor(response.status / 100) != 2) {
-                        throw new Error(`HTTP response ${response.status} ${response.statusText}`);
+                        throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`);
                     }
                     f.userName(newName);
                     f.checked(false);
@@ -159,13 +160,14 @@ class ListViewModel {
                 for (const f of this.selectedFiles()) {
                     const response = await fetch(f.url, {
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'X-FileManagementPassword': prompt("Enter the file management password to make changes.")
                         },
                         method: "PATCH",
                         body: JSON.stringify({ category: newCategory })
                     });
                     if (Math.floor(response.status / 100) != 2) {
-                        throw new Error(`HTTP response ${response.status} ${response.statusText}`);
+                        throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`);
                     }
                     f.category(newCategory);
                     f.checked(false);
@@ -182,10 +184,13 @@ class ListViewModel {
             try {
                 for (const f of this.selectedFiles()) {
                     const response = await fetch(f.url, {
+                        headers: {
+                            'X-FileManagementPassword': prompt("Enter the file management password to make changes.")
+                        },
                         method: "DELETE"
                     });
                     if (Math.floor(response.status / 100) != 2) {
-                        throw new Error(`HTTP response ${response.status} ${response.statusText}`);
+                        throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`);
                     }
                     this.files.remove(f);
                 }

@@ -19,7 +19,8 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"
             integrity="sha256-owX7sroiO/O1a7h3a4X29A1g3QgqdNvijRQ7V5TH45M="
             crossorigin="anonymous"></script>
-    <!-- Main script -->
+    <!-- Main scripts -->
+    <script src="scripts/common.js"></script>
     <script src="scripts/list.js"></script>
     <style type="text/css">
         body {
@@ -105,7 +106,7 @@
             </ul>
         </div>
     </nav>
-    <div id="ko-area" data-bind="style: { display: 'block' }">
+    <div id="ko-area" style="display: none" data-bind="style: { display: 'block' }">
         <p align="center">
             <label for="taken-after">
                 Taken after:
