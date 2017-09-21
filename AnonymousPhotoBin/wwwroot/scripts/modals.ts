@@ -10,21 +10,6 @@ function alertAsync(str: string): Promise<void> | void {
         callback: () => resolve(),
         animate: false
     }))
-    : window.alertify ? new Promise(resolve => window.alertify.alert(str, () => resolve()))
-    : window.BootstrapDialog ? new Promise(resolve => window.BootstrapDialog.show({
-        message: $("<div></div>").text(str).html(),
-        closable: false,
-        buttons: [
-            {
-                label: "OK",
-                hotkey: 13,
-                action: (d: any) => {
-                    d.close();
-                    resolve();
-                }
-            }
-        ]
-    }))
     : alert(str);
 }
 
@@ -35,31 +20,6 @@ function promptAsync(str: string, _default?: string): Promise<string | null> | s
         callback: (s: string) => resolve(s),
         animate: false
     }))
-    : window.alertify ? new Promise(resolve => window.alertify.prompt(str, _default, (e: Event, s: string) => resolve(s)))
-    : window.BootstrapDialog ? new Promise<string | null>(resolve => window.BootstrapDialog.show({
-        message: $("<div></div>")
-            .text(str)
-            .append("<br/>")
-            .append($("<input/>").attr("type", "text").val(_default || "").css("width", "100%"))
-            .html(),
-        closable: false,
-        buttons: [
-            {
-                label: "OK",
-                hotkey: 13,
-                action: (d: any) => {
-                    d.close();
-                    resolve(d.getModalBody().find("input").val());
-                }
-            }, {
-                label: "Cancel",
-                action: (d: any) => {
-                    d.close();
-                    resolve(null);
-                }
-            }
-        ]
-    }))
     : prompt(str, _default);
 }
 
@@ -68,27 +28,6 @@ function confirmAsync(str: string): Promise<boolean> | boolean {
         message: str,
         callback: (b: boolean) => resolve(b),
         animate: false
-    }))
-    : window.alertify ? new Promise(resolve => window.alertify.confirm(str, (e: Event, b: boolean) => resolve(b)))
-    : window.BootstrapDialog ? new Promise(resolve => window.BootstrapDialog.show({
-        message: $("<div></div>").text(str).html(),
-        closable: false,
-        buttons: [
-            {
-                label: "OK",
-                hotkey: 13,
-                action: (d: any) => {
-                    d.close();
-                    resolve(true);
-                }
-            }, {
-                label: "Cancel",
-                action: (d: any) => {
-                    d.close();
-                    resolve(false);
-                }
-            }
-        ]
     }))
     : confirm(str);
 }
