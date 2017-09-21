@@ -83,8 +83,9 @@ class ListViewModel {
         this.endDate = ko.observable(`${new Date().getFullYear() + 1}-01-01T00:00`);
         this.userName = ko.observable("");
         this.category = ko.observable("");
-        this.viewStyle = ko.observable("Table");
         this.resetFilters();
+        
+        this.viewStyle = ko.observable("table");
 
         this.selectAllChecked = ko.observable(false);
         this.selectAllChecked.subscribe(newValue => {

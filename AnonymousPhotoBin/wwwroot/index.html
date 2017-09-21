@@ -46,7 +46,14 @@
     <script src="scripts/index.js"></script>
 </head>
 <body>
-    <h1>Upload Files</h1>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="/">Upload <span class="sr-only">(current)</span></a></li>
+                <li><a href="/list.html">List</a></li>
+            </ul>
+        </div>
+    </nav>
     <form method="post" enctype="multipart/form-data" action="/api/files/legacy">
         <div class="form-group">
             <label for="userName">Your name (optional)</label>
@@ -64,11 +71,22 @@
         </div>
     </form>
     <div id="ko-area" style="display: none" data-bind="style: { display: 'block' }">
-        <div id="chooseFiles" class="btn btn-default" data-bind="click: choose">
+        <div class="btn btn-default" data-bind="click: choose">
             <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
             Choose files to upload...
         </div>
         <br />
+        <!-- ko if: !uploading() && files().length -->
+        <br />
+        <div class="btn btn-primary" data-bind="click: upload">
+            <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+            <span data-bind="text: uploadButtonText">Upload 0 files</span>
+        </div>
+        <div class="btn btn-default btn-sm" data-bind="click: reset">
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+            Reset
+        </div>
+        <!-- /ko -->
         <div id="progress" class="progress">
             <div class="progress-bar progress-bar-success" data-bind="style: { width: fileProgressPercentage }"></div>
         </div>
@@ -81,13 +99,7 @@
         <div data-bind="text: caption2">
             Caption2
         </div>
-        <br />
-        <!-- ko if: !uploading() && files().length -->
-        <div id="chooseFiles" class="btn btn-primary" data-bind="click: upload">
-            <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
-            <span data-bind="text: uploadButtonText">Upload 0 files</span>
-        </div>
-        <!-- /ko -->
+        <hr />
         <h2>Uploaded</h2>
         <div class="btn btn-default btn-sm" data-bind="click: clearUploaded">
             <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>

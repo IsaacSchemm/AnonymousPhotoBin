@@ -93,6 +93,10 @@ class FileUploadViewModel {
         this.uploading(false);
     }
 
+    reset() {
+        this.files([]);
+    }
+
     clearUploaded() {
         this.uploaded([]);
     }

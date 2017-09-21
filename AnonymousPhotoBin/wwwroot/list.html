@@ -97,6 +97,14 @@
     </style>
 </head>
 <body>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <ul class="nav navbar-nav">
+                <li><a href="/">Upload</a></li>
+                <li class="active"><a href="/list.html">List<span class="sr-only">(current)</span></a></li>
+            </ul>
+        </div>
+    </nav>
     <div id="ko-area" data-bind="style: { display: 'block' }">
         <p align="center">
             <label for="taken-after">
@@ -124,9 +132,9 @@
             <label>
                 View as:
                 <select class="form-control" data-bind="value: viewStyle">
-                    <option>Table</option>
-                    <option>Table + Small Thumbnails</option>
-                    <option>Large Thumbnails</option>
+                    <option value="table">Table</option>
+                    <option value="tablethumb">Table + Small Thumbnails</option>
+                    <option value="thumb">Large Thumbnails</option>
                 </select>
             </label>
         </p>
@@ -148,14 +156,14 @@
             </button>
         </p>
         
-        <!-- ko if: viewStyle() == 'Table' || viewStyle() == 'Table + Small Thumbnails' -->
+        <!-- ko if: viewStyle() == 'table' || viewStyle() == 'tablethumb' -->
         <table>
             <thead>
                 <tr>
                     <th width="32px" style="text-align: center">
                         <input type="checkbox" data-bind="checked: selectAllChecked" />
                     </th>
-                    <!-- ko if: viewStyle() == 'Table + Small Thumbnails' -->
+                    <!-- ko if: viewStyle() == 'tablethumb' -->
                     <td width="80px"></td>
                     <!-- /ko -->
                     <th width="250px">Name</th>
@@ -171,7 +179,7 @@
                     <td style="text-align: center">
                         <input type="checkbox" style="margin: 0" data-bind="checked: checked, click: defaultAction, clickBubble: false" />
                     </td>
-                    <!-- ko if: $parent.viewStyle() == 'Table + Small Thumbnails' -->
+                    <!-- ko if: $parent.viewStyle() == 'tablethumb' -->
                     <td style="text-align: center">
                         <img data-bind="attr: { src: thumbnailUrl }" height="40" />
                     </td>
@@ -188,7 +196,7 @@
             </tbody>
         </table>
         <!-- /ko -->
-        <!-- ko if: viewStyle() == 'Large Thumbnails' -->
+        <!-- ko if: viewStyle() == 'thumb' -->
         <!-- ko foreach: displayedFiles -->
         <div class="file" data-bind="css: { checked: checked }, click: toggle">
             <div class="ck">
