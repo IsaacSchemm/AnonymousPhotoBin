@@ -15,6 +15,7 @@
 
     checked: KnockoutObservable<boolean>;
 
+    readonly takenOrUploadedAt: Date;
     readonly takenAtStr: KnockoutComputed<string | null>;
     readonly uploadedAtStr: KnockoutComputed<string>;
 
@@ -26,6 +27,7 @@
             ? new Date(m.takenAt)
             : null;
         this.uploadedAt = new Date(m.uploadedAt);
+        this.takenOrUploadedAt = this.takenAt || this.uploadedAt;
         this.originalFilename = m.originalFilename;
         this.userName = ko.observable(m.userName || "");
         this.category = ko.observable(m.category || "");
@@ -76,9 +78,7 @@ class ListViewModel {
     private password: string | null;
 
     constructor(files: IFileMetadata[]) {
-        this.files = ko.observableArray(files
-            .map(f => new FileModel(f))
-            .sort((a, b) => +(a.takenAt || a.uploadedAt) - +(b.takenAt || b.uploadedAt)));
+        this.files = ko.observableArray(files.map(f => new FileModel(f)));
 
         try {
             this.myTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -239,4 +239,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     let resp = await fetch("/api/files");
     let files = await resp.json();
     ko.applyBindings(vm = new ListViewModel(files), document.getElementById("ko-area"));
+    vm.files.orderField("takenOrUploadedAt");
 }, false);
