@@ -1,6 +1,7 @@
-﻿interface FileData extends JQueryFileInputOptions {
-    process: () => JQueryPromise<void>;
-    submit: () => JQueryPromise<any>;
+﻿interface FileData {
+    files: File[];
+    process(): JQueryPromise<void>;
+    submit(): JQueryPromise<any>;
 }
 
 class FileUploadViewModel {
@@ -36,8 +37,13 @@ class FileUploadViewModel {
             url: "/api/files",
             sequentialUploads: true,
             dataType: "json",
-            add: (e, data) => {
-                this.files.push(data as FileData);
+            add: (e, data: FileData) => {
+                let tooBig = data.files.filter(f => f.size > 209715200);
+                if (tooBig.length > 0) {
+                    alertAsync(`The file "${tooBig[0].name}" cannot be uploaded because it is bigger than 200 MB.`);
+                } else {
+                    this.files.push(data);
+                }
             },
             progressall: (e, data) => {
                 this.fileProgress((data.loaded || 0) / (data.total || 0));

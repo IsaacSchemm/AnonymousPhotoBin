@@ -85,7 +85,10 @@ namespace AnonymousPhotoBin.Controllers {
         
         [HttpPost]
         [Route("api/files")]
+        [RequestSizeLimit(209715200)]
         public async Task<List<FileMetadata>> Post(List<IFormFile> files, string userName = null, string category = null) {
+            _context.Database.SetCommandTimeout(TimeSpan.FromMinutes(1));
+
             List<FileMetadata> l = new List<FileMetadata>();
             foreach (var file in files) {
                 using (var ms = new MemoryStream()) {
