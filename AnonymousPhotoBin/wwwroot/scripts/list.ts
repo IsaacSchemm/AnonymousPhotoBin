@@ -151,10 +151,6 @@ class ListViewModel {
         this.category("");
     }
 
-    download() {
-
-    }
-
     private async fetchOrError(input: RequestInfo, init?: RequestInit) {
         const response = await fetch(input, {
             ...init,
@@ -167,6 +163,18 @@ class ListViewModel {
             throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`);
         }
         return response;
+    }
+
+    download() {
+        const f = $("<form></form>")
+            .attr("method", "post")
+            .attr("action", "/api/files/zip")
+            .appendTo(document.body);
+        $("<textarea></textarea>")
+            .attr("name", "ids")
+            .text(this.selectedFiles().map(f => f.fileMetadataId).join(","))
+            .appendTo(f);
+        f.submit().remove();
     }
 
     async changeUserName() {

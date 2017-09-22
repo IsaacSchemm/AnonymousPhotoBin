@@ -13,6 +13,7 @@ using SixLabors.ImageSharp.MetaData.Profiles.Exif;
 using System.Net;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
+using System.IO.Compression;
 
 namespace AnonymousPhotoBin.Controllers {
     public class FilesController : Controller {
@@ -60,6 +61,27 @@ namespace AnonymousPhotoBin.Controllers {
                 return File(photo.JpegThumbnail.Data, "image/jpeg");
             }
         }
+
+        [HttpPost]
+        [Route("api/files/zip")]
+        public async Task<IActionResult> Zip(string ids) {
+            IEnumerable<Guid> guids = ids.Split('\r', '\n', ',', ';').Where(s => s != "").Select(s => Guid.Parse(s));
+            using (var ms = new MemoryStream()) {
+                using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, true)) {
+                    foreach (Guid id in guids) {
+                        var file = await _context.FileMetadata.Include(nameof(FileMetadata.FileData)).FirstOrDefaultAsync(f => f.FileMetadataId == id);
+                        if (file == null) continue;
+
+                        var entry = archive.CreateEntry(file.NewFilename, CompressionLevel.NoCompression);
+                        entry.LastWriteTime = file.UploadedAt;
+                        using (var zipStream = entry.Open()) {
+                            await zipStream.WriteAsync(file.FileData.Data, 0, file.FileData.Data.Length);
+                        }
+                    }
+                }
+                return File(ms.ToArray(), "application/zip", $"photobin_{DateTime.UtcNow.ToString("yyyyMMdd-hhmmss")}.zip");
+            }
+        }
         
         [HttpPost]
         [Route("api/files")]
@@ -73,6 +95,9 @@ namespace AnonymousPhotoBin.Controllers {
                     byte[] hash = SHA256.ComputeHash(data);
                     var existing = await _context.FileMetadata.FirstOrDefaultAsync(f2 => f2.Sha256 == hash);
                     if (existing != null) {
+                        existing.UserName = userName ?? existing.UserName;
+                        existing.Category = category ?? existing.Category;
+                        await _context.SaveChangesAsync();
                         l.Add(existing);
                     } else {
                         int? width = null;
