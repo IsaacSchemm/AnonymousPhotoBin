@@ -207,8 +207,12 @@ namespace AnonymousPhotoBin.Controllers {
             if (f == null) {
                 return NotFound();
             } else {
+                // Null in patch means field was not included.
                 if (patch.UserName != null) f.UserName = patch.UserName;
                 if (patch.Category != null) f.Category = patch.Category;
+                // Database should store null for consistency.
+                if (f.UserName == "") f.UserName = null;
+                if (f.Category == "") f.Category = null;
                 await _context.SaveChangesAsync();
                 return NoContent();
             }

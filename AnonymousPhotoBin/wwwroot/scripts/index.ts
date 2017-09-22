@@ -80,7 +80,7 @@ class FileUploadViewModel {
                 filesUploaded++;
                 this.caption1("");
                 this.caption2(`Uploaded ${filesUploaded} file${filesUploaded == 1 ? "" : "s"}.`);
-                this.totalProgress(filesUploaded / (filesUploaded + this.files().length));
+                this.totalProgress(filesUploaded / files.length);
             } catch (e) {
                 console.error(e);
                 this.caption1(`An unknown error occurred while uploading ${data!.files[0].name}.`);
