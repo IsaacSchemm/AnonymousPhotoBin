@@ -49,6 +49,11 @@
     }
 }
 
+interface KnockoutObservableArray<T> {
+    orderField: KnockoutObservable<string>;
+    orderDirection: KnockoutObservable<"asc" | "desc">;
+}
+
 class ListViewModel {
     readonly files: KnockoutObservableArray<FileModel>;
     readonly myTimeZone: string;
