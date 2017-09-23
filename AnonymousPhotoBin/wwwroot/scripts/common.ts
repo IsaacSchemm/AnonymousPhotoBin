@@ -13,6 +13,7 @@ interface IFileMetadata {
     originalFilename: string;
     userName: string | null;
     category: string | null;
+    size: number;
     contentType: string;
 
     url: string;

@@ -152,6 +152,7 @@ namespace AnonymousPhotoBin.Controllers {
                             OriginalFilename = Path.GetFileName(file.FileName),
                             UserName = userName,
                             Category = category,
+                            Size = data.Length,
                             Sha256 = hash,
                             ContentType = file.ContentType,
                             FileData = new FileData {
@@ -233,6 +234,13 @@ namespace AnonymousPhotoBin.Controllers {
                 return NotFound();
             } else {
                 _context.FileMetadata.Remove(f);
+                _context.FileData.RemoveRange(
+                    from d in _context.FileData
+                    where new int?[] {
+                        f.FileDataId,
+                        f.JpegThumbnailId
+                    }.Contains(d.FileDataId)
+                    select d);
                 await _context.SaveChangesAsync();
                 return NoContent();
             }

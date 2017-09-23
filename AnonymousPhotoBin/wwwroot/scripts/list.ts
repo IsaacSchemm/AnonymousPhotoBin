@@ -7,6 +7,7 @@
     readonly originalFilename: string;
     readonly userName: KnockoutObservable<string>;
     readonly category: KnockoutObservable<string>;
+    readonly size: number;
     readonly contentType: string;
 
     readonly url: string;
@@ -16,6 +17,8 @@
     checked: KnockoutObservable<boolean>;
 
     readonly takenOrUploadedAt: Date;
+    readonly sizeStr: string;
+
     readonly takenAtStr: KnockoutComputed<string | null>;
     readonly uploadedAtStr: KnockoutComputed<string>;
 
@@ -31,6 +34,10 @@
         this.originalFilename = m.originalFilename;
         this.userName = ko.observable(m.userName || "");
         this.category = ko.observable(m.category || "");
+        this.size = m.size;
+        this.sizeStr = this.size >= 1048576 ? `${(this.size / 1048576).toFixed(2)} MiB`
+            : this.size >= 1024 ? `${(this.size / 1024).toFixed(2)} KiB`
+                : `${this.size} bytes`;
         this.contentType = m.contentType;
         this.newFilename = m.newFilename;
 

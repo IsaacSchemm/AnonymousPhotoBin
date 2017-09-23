@@ -106,6 +106,8 @@
         }
         label {
             font-weight: normal;
+            vertical-align: bottom;
+            margin-bottom: 0;
         }
     </style>
 </head>
@@ -185,6 +187,9 @@
                     <th width="100%" class="hidden-xs">
                         <a href="#" data-bind="orderable: { collection: 'files', field: 'originalFilename' }">Original name</a>
                     </th>
+                    <th width="100px">
+                        <a href="#" data-bind="orderable: { collection: 'files', field: 'size' }">Size</a>
+                    </th>
                     <th width="160px">
                         <a href="#" data-bind="orderable: { collection: 'files', field: 'takenOrUploadedAt' }">Taken</a>
                     </th>
@@ -213,6 +218,7 @@
                         <a href="#" target="_blank" data-bind="text: newFilename, attr: { href: url }, click: defaultAction, clickBubble: false"></a>
                     </td>
                     <td data-bind="text: originalFilename" class="hidden-xs"></td>
+                    <td data-bind="text: sizeStr"></td>
                     <td data-bind="text: takenAtStr"></td>
                     <td data-bind="text: uploadedAtStr" class="hidden-xs"></td>
                     <td data-bind="text: userName" class="hidden-sm hidden-xs"></td>

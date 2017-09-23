@@ -11,7 +11,7 @@ using System;
 namespace AnonymousPhotoBin.Migrations
 {
     [DbContext(typeof(PhotoBinDbContext))]
-    [Migration("20170919200619_Initial")]
+    [Migration("20170923010132_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -40,18 +40,22 @@ namespace AnonymousPhotoBin.Migrations
 
                     b.Property<string>("Category");
 
-                    b.Property<string>("ContentType");
+                    b.Property<string>("ContentType")
+                        .IsRequired();
 
                     b.Property<int>("FileDataId");
 
-                    b.Property<int>("Height");
+                    b.Property<int?>("Height");
 
                     b.Property<int?>("JpegThumbnailId");
 
-                    b.Property<string>("OriginalFilename");
+                    b.Property<string>("OriginalFilename")
+                        .IsRequired();
 
                     b.Property<byte[]>("Sha256")
                         .HasColumnType("binary(32)");
+
+                    b.Property<long>("Size");
 
                     b.Property<DateTime?>("TakenAt");
 
@@ -59,7 +63,7 @@ namespace AnonymousPhotoBin.Migrations
 
                     b.Property<string>("UserName");
 
-                    b.Property<int>("Width");
+                    b.Property<int?>("Width");
 
                     b.HasKey("FileMetadataId");
 

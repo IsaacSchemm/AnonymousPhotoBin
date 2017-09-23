@@ -28,16 +28,17 @@ namespace AnonymousPhotoBin.Migrations
                 {
                     FileMetadataId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Category = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ContentType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ContentType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileDataId = table.Column<int>(type: "int", nullable: false),
-                    Height = table.Column<int>(type: "int", nullable: false),
+                    Height = table.Column<int>(type: "int", nullable: true),
                     JpegThumbnailId = table.Column<int>(type: "int", nullable: true),
-                    OriginalFilename = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    OriginalFilename = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Sha256 = table.Column<byte[]>(type: "binary(32)", nullable: true),
+                    Size = table.Column<long>(type: "bigint", nullable: false),
                     TakenAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UploadedAt = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Width = table.Column<int>(type: "int", nullable: false)
+                    Width = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {

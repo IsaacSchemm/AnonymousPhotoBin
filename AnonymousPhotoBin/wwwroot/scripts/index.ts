@@ -71,6 +71,7 @@ class FileUploadViewModel {
         this.files([]);
 
         let filesUploaded = 0;
+        let bar = 0;
         let data: FileData | undefined;
         this.caption1("");
         this.caption2("");
@@ -89,7 +90,6 @@ class FileUploadViewModel {
                 filesUploaded++;
                 this.caption1("");
                 this.caption2(`Uploaded ${filesUploaded} file${filesUploaded == 1 ? "" : "s"}.`);
-                this.totalProgress(filesUploaded / files.length);
             } catch (e) {
                 console.error(e);
                 if ("status" in e && e.status == 502) {
@@ -98,6 +98,7 @@ class FileUploadViewModel {
                     this.errors.push(`Could not save ${data.files[0].name} (an unknown error occurred.)`);
                 }
             }
+            this.totalProgress(++bar / files.length);
         }
 
         this.fileProgress(0);

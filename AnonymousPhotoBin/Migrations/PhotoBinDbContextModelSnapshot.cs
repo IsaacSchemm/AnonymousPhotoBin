@@ -54,6 +54,8 @@ namespace AnonymousPhotoBin.Migrations
                     b.Property<byte[]>("Sha256")
                         .HasColumnType("binary(32)");
 
+                    b.Property<long>("Size");
+
                     b.Property<DateTime?>("TakenAt");
 
                     b.Property<DateTimeOffset>("UploadedAt");
