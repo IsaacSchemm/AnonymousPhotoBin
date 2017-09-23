@@ -10,6 +10,7 @@ class FileUploadViewModel {
     readonly caption1: KnockoutObservable<string | null>;
     readonly totalProgress: KnockoutObservable<number>;
     readonly caption2: KnockoutObservable<string | null>;
+    readonly errors: KnockoutObservableArray<string>;
     readonly uploaded: KnockoutObservableArray<IFileMetadata>;
     readonly uploading: KnockoutObservable<boolean>;
 
@@ -23,6 +24,7 @@ class FileUploadViewModel {
         this.totalProgress = ko.observable(0);
         this.caption1 = ko.observable(null);
         this.caption2 = ko.observable(null);
+        this.errors = ko.observableArray();
         this.uploaded = ko.observableArray();
         this.uploading = ko.observable(false);
 
@@ -72,6 +74,7 @@ class FileUploadViewModel {
         let data: FileData | undefined;
         this.caption1("");
         this.caption2("");
+        this.errors([]);
         for (let data of files) {
             try {
                 this.caption1(`Uploading ${data.files[0].name}...`);
@@ -89,8 +92,11 @@ class FileUploadViewModel {
                 this.totalProgress(filesUploaded / files.length);
             } catch (e) {
                 console.error(e);
-                this.caption1(`An unknown error occurred while uploading ${data!.files[0].name}.`);
-                break;
+                if ("status" in e && e.status == 502) {
+                    this.errors.push(`Could not save ${data.files[0].name} (the operation timed out.)`);
+                } else {
+                    this.errors.push(`Could not save ${data.files[0].name} (an unknown error occurred.)`);
+                }
             }
         }
 

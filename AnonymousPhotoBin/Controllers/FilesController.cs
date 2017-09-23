@@ -27,6 +27,8 @@ namespace AnonymousPhotoBin.Controllers {
         public FilesController(PhotoBinDbContext context, IConfiguration configuration) {
             _context = context;
             _configuration = configuration;
+
+            _context.Database.SetCommandTimeout(TimeSpan.FromSeconds(70));
         }
         
         [HttpGet]
@@ -87,8 +89,6 @@ namespace AnonymousPhotoBin.Controllers {
         [Route("api/files")]
         [RequestSizeLimit(209715200)]
         public async Task<List<FileMetadata>> Post(List<IFormFile> files, string userName = null, string category = null) {
-            _context.Database.SetCommandTimeout(TimeSpan.FromMinutes(1));
-
             List<FileMetadata> l = new List<FileMetadata>();
             foreach (var file in files) {
                 using (var ms = new MemoryStream()) {

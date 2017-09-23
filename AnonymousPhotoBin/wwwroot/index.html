@@ -101,6 +101,11 @@
         <div data-bind="text: caption2">
             Caption2
         </div>
+        <div data-bind="foreach: errors">
+            <div data-bind="text: $data">
+                Error
+            </div>
+        </div>
         <hr />
         <h2>Uploaded</h2>
         <div class="btn btn-default btn-sm" data-bind="click: clearUploaded">
