@@ -40,7 +40,7 @@ class FileUploadViewModel {
             sequentialUploads: true,
             dataType: "json",
             add: (e, data: FileData) => {
-                let tooBig = data.files.filter(f => f.size > 209715200);
+                let tooBig = data.files.filter(f => f.size > 105000000);
                 if (tooBig.length > 0) {
                     alertAsync(`The file "${tooBig[0].name}" cannot be uploaded because it is bigger than 200 MB.`);
                 } else {
