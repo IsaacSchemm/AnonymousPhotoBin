@@ -25,7 +25,7 @@ namespace AnonymousPhotoBin.Data {
 
         public string Category { get; set; }
 
-        public long Size { get; set; }
+        public int Size { get; set; }
 
         [Column(TypeName = "binary(32)")]
         public byte[] Sha256 { get; set; }

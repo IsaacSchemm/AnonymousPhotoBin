@@ -11,9 +11,10 @@ using System;
 namespace AnonymousPhotoBin.Migrations
 {
     [DbContext(typeof(PhotoBinDbContext))]
-    partial class PhotoBinDbContextModelSnapshot : ModelSnapshot
+    [Migration("20170923024644_SizeAsInt32")]
+    partial class SizeAsInt32
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -13,6 +13,7 @@ using SixLabors.ImageSharp.MetaData.Profiles.Exif;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 using System.IO.Compression;
+using System.Threading;
 
 namespace AnonymousPhotoBin.Controllers {
     public class FilesController : Controller {
@@ -65,23 +66,55 @@ namespace AnonymousPhotoBin.Controllers {
 
         [HttpPost]
         [Route("api/files/zip")]
-        public async Task<IActionResult> Zip(string ids) {
-            IEnumerable<Guid> guids = ids.Split('\r', '\n', ',', ';').Where(s => s != "").Select(s => Guid.Parse(s));
-            using (var ms = new MemoryStream()) {
-                using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, true)) {
-                    foreach (Guid id in guids) {
-                        var file = await _context.FileMetadata.Include(nameof(FileMetadata.FileData)).FirstOrDefaultAsync(f => f.FileMetadataId == id);
-                        if (file == null) continue;
+        public async Task<IActionResult> Zip(string ids, bool? compressed, CancellationToken token) {
+            Response.ContentType = "application/zip";
+            Response.Headers.Add("Content-Disposition", $"attachment;filename=photobin_{DateTime.UtcNow.ToString("yyyyMMdd - hhmmss")}.zip");
 
-                        var entry = archive.CreateEntry(file.NewFilename, CompressionLevel.NoCompression);
+            IEnumerable<Guid> guids = ids.Split('\r', '\n', ',', ';').Where(s => s != "").Select(s => Guid.Parse(s));
+            var fileMetadata = await _context.FileMetadata.Where(f => guids.Contains(f.FileMetadataId)).ToListAsync();
+
+            var compressionLevel = compressed == true
+                ? CompressionLevel.Optimal
+                : CompressionLevel.NoCompression;
+
+            if (compressionLevel == CompressionLevel.NoCompression) {
+                // The size of a .zip file with no compression can be determined from just the names and sizes of the files.
+                using (var s = new LengthStream()) {
+                    using (var archive = new ZipArchive(s, ZipArchiveMode.Create, true)) {
+                        foreach (var file in fileMetadata) {
+                        token.ThrowIfCancellationRequested();
+                            byte[] data = new byte[file.Size];
+
+                            var entry = archive.CreateEntry(file.NewFilename, compressionLevel);
+                            entry.LastWriteTime = file.UploadedAt;
+                            using (var zipStream = entry.Open()) {
+                                await zipStream.WriteAsync(data, 0, data.Length);
+                            }
+                        }
+                    }
+                    Response.Headers.Add("Content-Length", s.Position.ToString());
+                }
+            }
+
+            using (var s = Response.Body) {
+                using (var archive = new ZipArchive(s, ZipArchiveMode.Create, true)) {
+                    foreach (var file in fileMetadata) {
+                        token.ThrowIfCancellationRequested();
+                        byte[] data = await _context.FileData
+                            .Where(d => d.FileDataId == file.FileDataId)
+                            .Select(d => d.Data)
+                            .SingleAsync();
+
+                        var entry = archive.CreateEntry(file.NewFilename, compressionLevel);
                         entry.LastWriteTime = file.UploadedAt;
                         using (var zipStream = entry.Open()) {
-                            await zipStream.WriteAsync(file.FileData.Data, 0, file.FileData.Data.Length);
+                            await zipStream.WriteAsync(data, 0, data.Length);
                         }
                     }
                 }
-                return File(ms.ToArray(), "application/zip", $"photobin_{DateTime.UtcNow.ToString("yyyyMMdd-hhmmss")}.zip");
             }
+
+            return new EmptyResult();
         }
         
         [HttpPost]
