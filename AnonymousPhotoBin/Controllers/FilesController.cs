@@ -10,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.MetaData.Profiles.Exif;
-using System.Net;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 using System.IO.Compression;

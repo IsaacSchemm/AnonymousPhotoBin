@@ -88,16 +88,16 @@ class FileUploadViewModel {
                 }
 
                 filesUploaded++;
-                this.caption1("");
                 this.caption2(`Uploaded ${filesUploaded} file${filesUploaded == 1 ? "" : "s"}.`);
             } catch (e) {
                 console.error(e);
                 if ("status" in e && e.status == 502) {
-                    this.errors.push(`Could not save ${data.files[0].name} (the operation timed out.)`);
+                    this.errors.push(`Could not save ${data.files[0].name} (a database error occurred.)`);
                 } else {
                     this.errors.push(`Could not save ${data.files[0].name} (an unknown error occurred.)`);
                 }
             }
+            this.caption1("");
             this.totalProgress(++bar / files.length);
         }
 
