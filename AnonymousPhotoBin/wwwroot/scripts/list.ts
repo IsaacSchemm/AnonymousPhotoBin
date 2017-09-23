@@ -93,8 +93,8 @@ class ListViewModel {
             this.myTimeZone = `UTC + ${new Date().getTimezoneOffset()} minutes`;
         }
 
-        this.startDate = ko.observable("2000-01-01T00:00");
-        this.endDate = ko.observable(`${new Date().getFullYear() + 1}-01-01T00:00`);
+        this.startDate = ko.observable("");
+        this.endDate = ko.observable("");
         this.userName = ko.observable("");
         this.category = ko.observable("");
         this.resetFilters();
@@ -152,8 +152,9 @@ class ListViewModel {
     }
 
     resetFilters() {
-        this.startDate("2000-01-01T00:00");
-        this.endDate(`${new Date().getFullYear() + 1}-01-01T00:00`);
+        let dates = this.files().map(f => f.takenOrUploadedAt).sort((a, b) => +a - +b);
+        this.startDate(`${dates[0].getFullYear()}-01-01T00:00`);
+        this.endDate(`${dates[dates.length - 1].getFullYear() + 1}-01-01T00:00`);
         this.userName("");
         this.category("");
     }
