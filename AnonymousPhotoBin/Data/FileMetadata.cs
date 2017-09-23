@@ -43,7 +43,7 @@ namespace AnonymousPhotoBin.Data {
         [ForeignKey(nameof(JpegThumbnailId))]
         public FileData JpegThumbnail { get; set; }
 
-        public string Url => $"/api/files/{this.FileMetadataId}/{this.NewFilename}";
+        public string Url => $"/api/files/{this.FileMetadataId}";
 
         public string ThumbnailUrl => $"/api/thumbnails/{this.FileMetadataId}";
 

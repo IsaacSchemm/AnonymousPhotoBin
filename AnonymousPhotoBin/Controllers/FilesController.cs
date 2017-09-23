@@ -39,12 +39,12 @@ namespace AnonymousPhotoBin.Controllers {
 
         [HttpGet]
         [Route("api/files/{id}")]
-        [Route("api/files/{id}/{filename}")]
         public async Task<IActionResult> Get(Guid id, string filename = null) {
             var photo = await _context.FileMetadata.Include(nameof(FileMetadata.FileData)).FirstOrDefaultAsync(p => p.FileMetadataId == id);
             if (photo == null) {
                 return NotFound();
             } else {
+                Response.Headers.Add("Content-Disposition", $"inline;filename={photo.NewFilename}");
                 return File(photo.FileData.Data, photo.ContentType);
             }
         }
@@ -234,7 +234,6 @@ namespace AnonymousPhotoBin.Controllers {
 
         [HttpPatch]
         [Route("api/files/{id}")]
-        [Route("api/files/{id}/{filename}")]
         public async Task<IActionResult> Patch(Guid id, [FromBody]FileMetadataPatch patch) {
             var r = BadRequestIfPasswordInvalid();
             if (r != null) return r;
@@ -256,7 +255,6 @@ namespace AnonymousPhotoBin.Controllers {
 
         [HttpDelete]
         [Route("api/files/{id}")]
-        [Route("api/files/{id}/{filename}")]
         public async Task<IActionResult> Delete(Guid id) {
             var r = BadRequestIfPasswordInvalid();
             if (r != null) return r;
