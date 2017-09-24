@@ -22,7 +22,7 @@
     readonly takenAtStr: KnockoutComputed<string | null>;
     readonly uploadedAtStr: KnockoutComputed<string>;
 
-    constructor(m: IFileMetadata) {
+    constructor(readonly parent: ListViewModel, m: IFileMetadata) {
         this.fileMetadataId = m.fileMetadataId;
         this.width = m.width;
         this.height = m.height;
@@ -49,8 +49,24 @@
         this.uploadedAtStr = ko.pureComputed(() => this.uploadedAt && this.uploadedAt.toLocaleString());
     }
 
-    toggle() {
-        this.checked(!this.checked());
+    toggle(x: FileModel, e: JQuery.Event) {
+        if (e.shiftKey) {
+            let index1 = Math.max(0, this.parent.files.indexOf(this.parent.lastClicked));
+            let index2 = Math.max(0, this.parent.files.indexOf(this));
+            let min = Math.min(index1, index2);
+            let max = Math.max(index1, index2);
+            this.parent.files().forEach((f, i) => {
+                f.checked(i >= min && i <= max);
+            });
+        } else if (e.ctrlKey) {
+            this.checked(!this.checked());
+            this.parent.lastClicked = this;
+        } else {
+            this.parent.files().forEach(f => {
+                f.checked(f === this);
+            });
+            this.parent.lastClicked = this;
+        }
     }
 
     defaultAction(f: FileModel, e: Event) {
@@ -82,10 +98,12 @@ class ListViewModel {
     readonly displayedFiles: KnockoutComputed<FileModel[]>;
     readonly undisplayedSelectedFiles: KnockoutComputed<FileModel[]>;
 
+    public lastClicked: FileModel;
     private password: string | null;
 
     constructor(files: IFileMetadata[]) {
-        this.files = ko.observableArray(files.map(f => new FileModel(f)));
+        this.files = ko.observableArray(files.map(f => new FileModel(this, f)));
+        this.lastClicked = this.files[0];
 
         try {
             this.myTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
