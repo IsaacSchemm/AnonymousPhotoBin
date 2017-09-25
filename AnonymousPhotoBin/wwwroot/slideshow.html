@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Slideshow</title>
+    <script src="//code.jquery.com/jquery-3.2.1.min.js"
+            integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+            crossorigin="anonymous"></script>
+    <link rel='stylesheet' href='css/jquery.swipeshow.css'>
+    <script src='lib/jquery.swipeshow.js'></script>
+    <script src="scripts/common.js"></script>
+    <script src="scripts/modals.js"></script>
+    <script src="scripts/slideshow.js"></script>
+    <style type="text/css">
+        html, body, .swipeshow {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            background-color: black;
+        }
+        .slide {
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        #buttons {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 4px;
+        }
+    </style>
+</head>
+<body class="swipeshow">
+    <ul class="slides"></ul>
+    <div id="buttons">
+        <button class="previous">&larr; Back</button>
+        <button class="next">Next &rarr;</button>
+    </div>
+</body>
+</html>

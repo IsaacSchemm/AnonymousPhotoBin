@@ -7,14 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="wwwroot\css\**" />
-    <Content Remove="wwwroot\css\**" />
-    <EmbeddedResource Remove="wwwroot\css\**" />
-    <None Remove="wwwroot\css\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Remove="wwwroot\scripts\list.ts" />
+    <Content Remove="wwwroot\scripts\slideshow.ts" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,6 +35,7 @@
   <ItemGroup>
     <TypeScriptCompile Include="wwwroot\scripts\modals.ts" />
     <TypeScriptCompile Include="wwwroot\scripts\list.ts" />
+    <TypeScriptCompile Include="wwwroot\scripts\slideshow.ts" />
   </ItemGroup>
 
 </Project>

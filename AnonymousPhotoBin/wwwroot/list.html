@@ -9,16 +9,17 @@
           integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
           crossorigin="anonymous">
     <!-- Promise and fetch polyfills (IE11, etc.) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-promise/4.1.1/es6-promise.auto.min.js"
-            integrity="sha256-OI3N9zCKabDov2rZFzl8lJUXCcP7EmsGcGoP6DMXQCo="
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/native-promise-only/0.8.1/npo.js"
+            integrity="sha256-o/UXdF4sFrbgV5UCIWF5ca7VMLDdplhzA4knJ4nFsc0="
             crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.min.js"
             integrity="sha256-aB35laj7IZhLTx58xw/Gm1EKOoJJKZt6RY+bH1ReHxs="
             crossorigin="anonymous"></script>
-    <!-- modals -->
+    <!-- jquery (required for modals and knockout orderable) -->
     <script src="//code.jquery.com/jquery-3.2.1.slim.min.js"
             integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g="
             crossorigin="anonymous"></script>
+    <!-- modals -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
             integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
             crossorigin="anonymous"></script>
@@ -117,6 +118,7 @@
             <ul class="nav navbar-nav">
                 <li><a href="/">Upload</a></li>
                 <li class="active"><a href="/list.html">List<span class="sr-only">(current)</span></a></li>
+                <li><a href="/about.html">About</a></li>
             </ul>
         </div>
     </nav>
