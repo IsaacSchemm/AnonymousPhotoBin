@@ -12,6 +12,7 @@ class FileUploadViewModel {
     readonly caption2: KnockoutObservable<string | null>;
     readonly errors: KnockoutObservableArray<string>;
     readonly uploaded: KnockoutObservableArray<IFileMetadata>;
+    readonly showUploaded: KnockoutObservable<boolean>;
     readonly uploading: KnockoutObservable<boolean>;
 
     readonly fileProgressPercentage: KnockoutComputed<string>;
@@ -26,6 +27,7 @@ class FileUploadViewModel {
         this.caption2 = ko.observable(null);
         this.errors = ko.observableArray();
         this.uploaded = ko.observableArray();
+        this.showUploaded = ko.observable(false);
         this.uploading = ko.observable(false);
 
         this.fileProgressPercentage = ko.pureComputed(() => `${this.fileProgress() * 100}%`);
@@ -88,7 +90,7 @@ class FileUploadViewModel {
                 }
 
                 filesUploaded++;
-                this.caption2(`Uploaded ${filesUploaded} file${filesUploaded == 1 ? "" : "s"}.`);
+                this.caption2(`Your files have been saved.`);
             } catch (e) {
                 console.error(e);
                 if ("status" in e && e.status == 502) {

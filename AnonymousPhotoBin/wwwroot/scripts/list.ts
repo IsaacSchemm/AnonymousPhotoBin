@@ -168,7 +168,7 @@ class ListViewModel {
                 }
             }
         }
-        return this.password || "";
+        return this.password;
     }
 
     resetFilters() {
@@ -183,7 +183,7 @@ class ListViewModel {
         const response = await fetch(input, {
             ...init,
             headers: {
-                'X-FileManagementPassword': await this.getPassword(),
+                'X-FileManagementPassword': await this.getPassword() || "",
                 ...(init ? init.headers : {})
             }
         });

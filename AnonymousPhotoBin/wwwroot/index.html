@@ -108,11 +108,13 @@
             </div>
         </div>
         <hr />
-        <h2>Uploaded</h2>
-        <div class="btn btn-default btn-sm" data-bind="click: clearUploaded">
-            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-            Clear list
+        <!-- ko if: !showUploaded() -->
+        <div class="btn btn-default btn-sm" data-bind="click: function() { showUploaded(true) }">
+            Show uploaded files
         </div>
+        <!-- /ko -->
+        <!-- ko if: showUploaded -->
+        <h2>Uploaded</h2>
         <br />
         <br />
         <!-- ko foreach: uploaded -->
@@ -121,6 +123,11 @@
         </a>
         <div data-bind="text: originalFilename"></div>
         <br />
+        <!-- /ko -->
+        <div class="btn btn-default btn-sm" data-bind="click: clearUploaded, visible: uploaded().length > 0">
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+            Clear list
+        </div>
         <!-- /ko -->
     </div>
 </body>
