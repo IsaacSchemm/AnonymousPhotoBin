@@ -2,6 +2,7 @@
   "compilerOptions": {
     "noImplicitAny": true,
     "noImplicitThis": true,
+    "strictPropertyInitialization": true,
     "noEmitOnError": true,
     "sourceMap": true,
     "strictNullChecks": true,
