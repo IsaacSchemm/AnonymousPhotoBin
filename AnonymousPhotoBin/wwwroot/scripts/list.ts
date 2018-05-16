@@ -26,10 +26,12 @@
         this.fileMetadataId = m.fileMetadataId;
         this.width = m.width;
         this.height = m.height;
-        this.takenAt = m.takenAt != null
-            ? new Date(m.takenAt)
+        this.takenAt = m.takenAt instanceof Date ? m.takenAt
+            : m.takenAt != null ? new Date(m.takenAt)
             : null;
-        this.uploadedAt = new Date(m.uploadedAt);
+        this.uploadedAt = m.uploadedAt instanceof Date
+            ? m.uploadedAt
+            : new Date(m.uploadedAt);
         this.takenOrUploadedAt = this.takenAt || this.uploadedAt;
         this.originalFilename = m.originalFilename;
         this.userName = ko.observable(m.userName || "");
@@ -166,7 +168,7 @@ class ListViewModel {
                 }
             }
         }
-        return this.password;
+        return this.password || "";
     }
 
     resetFilters() {
