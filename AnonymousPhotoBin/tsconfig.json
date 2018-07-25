@@ -13,8 +13,7 @@
     "wwwroot/scripts/common.ts",
     "wwwroot/scripts/modals.ts",
     "wwwroot/scripts/index.ts",
-    "wwwroot/scripts/list.ts",
-    "wwwroot/scripts/slideshow.ts"
+    "wwwroot/scripts/list.ts"
   ],
   "compileOnSave": true
 }

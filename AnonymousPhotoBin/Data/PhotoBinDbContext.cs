@@ -11,7 +11,5 @@ namespace AnonymousPhotoBin.Data {
         public DbSet<FileMetadata> FileMetadata { get; set; }
 
         public DbSet<FileData> FileData { get; set; }
-
-        public DbSet<SlideshowSlide> SlideshowSlides { get; set; }
     }
 }
