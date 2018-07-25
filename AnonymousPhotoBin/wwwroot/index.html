@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width" />
     <title>Upload Photos</title>
     <link rel="stylesheet"
-          href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
           integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
           crossorigin="anonymous">
     <style type="text/css">
@@ -28,18 +28,18 @@
             integrity="sha256-o/UXdF4sFrbgV5UCIWF5ca7VMLDdplhzA4knJ4nFsc0="
             crossorigin="anonymous"></script>
     <!-- jQuery and jQuery UI (used by file upload plugin) -->
-    <script src="//code.jquery.com/jquery-3.2.1.min.js"
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"
             integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
             crossorigin="anonymous"></script>
-    <script src="//code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
             integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
             crossorigin="anonymous"></script>
     <!-- File upload plugin -->
-    <script src="//cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.19.1/js/jquery.fileupload.js"
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-file-upload/9.19.1/js/jquery.fileupload.js"
             integrity="sha256-JBs/UTfhY8RkCwyn7zMxTDLcINzVqW/RzOqwdaPgh34="
             crossorigin="anonymous"></script>
     <!-- Knockout -->
-    <script src="//cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js"
             integrity="sha256-owX7sroiO/O1a7h3a4X29A1g3QgqdNvijRQ7V5TH45M="
             crossorigin="anonymous"></script>
     <!-- Main scripts -->
@@ -59,13 +59,13 @@
     </nav>
     <form method="post" enctype="multipart/form-data" action="/api/files/legacy">
         <div class="form-group">
-            <label for="userName">Your name (optional)</label>
+            <label for="userName">Your name</label>
             <input class="form-control" name="userName" id="userName">
         </div>
-        <div class="form-group">
+        <!--<div class="form-group">
             <label for="category">Category (optional)</label>
             <input class="form-control" name="category" id="category">
-        </div>
+        </div>-->
         <div class="form-group">
             <input type="file" name="files" multiple />
         </div>
@@ -74,30 +74,29 @@
         </div>
     </form>
     <div id="ko-area" style="display: none" data-bind="style: { display: 'block' }">
+        <!-- ko if: !uploading() && files().length == 0 -->
         <div class="btn btn-default" data-bind="click: choose">
             <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
             Choose files to upload...
         </div>
-        <br />
+        <!-- /ko -->
         <!-- ko if: !uploading() && files().length -->
-        <br />
         <div class="btn btn-primary" data-bind="click: upload">
             <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
             <span data-bind="text: uploadButtonText">Upload 0 files</span>
         </div>
+        <br />
+        <br />
         <div class="btn btn-default btn-sm" data-bind="click: reset">
             <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
             Reset
         </div>
         <!-- /ko -->
         <div id="progress" class="progress">
-            <div class="progress-bar progress-bar-success" data-bind="style: { width: fileProgressPercentage }"></div>
+            <div class="progress-bar progress-bar-success" data-bind="style: { width: progressPercentage }"></div>
         </div>
         <div data-bind="text: caption1">
             Caption1
-        </div>
-        <div id="progress" class="progress">
-            <div class="progress-bar progress-bar-success" data-bind="style: { width: totalProgressPercentage }"></div>
         </div>
         <div data-bind="text: caption2">
             Caption2

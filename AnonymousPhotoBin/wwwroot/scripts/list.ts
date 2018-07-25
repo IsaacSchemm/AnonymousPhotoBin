@@ -105,7 +105,7 @@ class ListViewModel {
 
     constructor(files: IFileMetadata[]) {
         this.files = ko.observableArray(files.map(f => new FileModel(this, f)));
-        this.lastClicked = this.files[0];
+        this.lastClicked = this.files()[0];
 
         try {
             this.myTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;

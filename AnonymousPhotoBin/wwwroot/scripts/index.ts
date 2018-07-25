@@ -15,14 +15,17 @@ class FileUploadViewModel {
     readonly showUploaded: KnockoutObservable<boolean>;
     readonly uploading: KnockoutObservable<boolean>;
 
+    readonly filesBeingUploaded: KnockoutObservable<number>;
     readonly fileProgressPercentage: KnockoutComputed<string>;
     readonly totalProgressPercentage: KnockoutComputed<string>;
+    readonly progressPercentage: KnockoutComputed<string>;
     readonly uploadButtonText: KnockoutComputed<string>;
 
     constructor() {
         this.files = ko.observableArray();
         this.fileProgress = ko.observable(0);
         this.totalProgress = ko.observable(0);
+        this.filesBeingUploaded = ko.observable(0);
         this.caption1 = ko.observable(null);
         this.caption2 = ko.observable(null);
         this.errors = ko.observableArray();
@@ -32,6 +35,7 @@ class FileUploadViewModel {
 
         this.fileProgressPercentage = ko.pureComputed(() => `${this.fileProgress() * 100}%`);
         this.totalProgressPercentage = ko.pureComputed(() => `${this.totalProgress() * 100}%`);
+        this.progressPercentage = ko.pureComputed(() => `${((this.fileProgress() / this.filesBeingUploaded()) + this.totalProgress()) * 100}%`);
         this.uploadButtonText = ko.pureComputed(() => {
             const l = this.files().length;
             return l == 1 ? "Upload file" : `Upload ${l} files`;
@@ -78,6 +82,7 @@ class FileUploadViewModel {
         this.caption1("");
         this.caption2("");
         this.errors([]);
+        this.filesBeingUploaded(files.length);
         for (let data of files) {
             try {
                 this.caption1(`Uploading ${data.files[0].name}...`);
@@ -90,7 +95,6 @@ class FileUploadViewModel {
                 }
 
                 filesUploaded++;
-                this.caption2(`Your files have been saved.`);
             } catch (e) {
                 console.error(e);
                 if ("status" in e && e.status == 502) {
@@ -103,8 +107,10 @@ class FileUploadViewModel {
             this.totalProgress(++bar / files.length);
         }
 
+        this.caption2("Upload complete.");
         this.fileProgress(0);
         this.totalProgress(0);
+        this.filesBeingUploaded(0);
         this.uploading(false);
     }
 

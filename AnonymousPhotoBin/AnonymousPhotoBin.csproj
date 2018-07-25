@@ -27,8 +27,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="wwwroot\scripts\index.js" />
-    <None Include="wwwroot\scripts\index.js.map" />
     <None Include="wwwroot\scripts\index.ts" />
   </ItemGroup>
 
