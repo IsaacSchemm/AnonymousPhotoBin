@@ -103,8 +103,8 @@ class ListViewModel {
     public lastClicked: FileModel;
     private password: string | null;
 
-    constructor(files: IFileMetadata[]) {
-        this.files = ko.observableArray(files.map(f => new FileModel(this, f)));
+    constructor() {
+        this.files = ko.observableArray();
         this.lastClicked = this.files()[0];
 
         try {
@@ -152,6 +152,12 @@ class ListViewModel {
         this.password = null;
     }
 
+    async loadFiles() {
+        let resp = await this.fetchOrError("/api/files");
+        let files: IFileMetadata[] = await resp.json();
+        this.files(files.map(f => new FileModel(this, f)));
+    }
+
     private async getPassword() {
         if (this.password == null) {
             const p = await promptAsync("Enter the file management password to make changes.");
@@ -173,8 +179,13 @@ class ListViewModel {
 
     resetFilters() {
         let dates = this.files().map(f => f.takenOrUploadedAt).sort((a, b) => +a - +b);
-        this.startDate(`${dates[0].getFullYear()}-01-01T00:00`);
-        this.endDate(`${dates[dates.length - 1].getFullYear() + 1}-01-01T00:00`);
+        if (dates.length == 0) {
+            this.startDate("2000-01-01T00:00");
+            this.endDate("2025-01-01T00:00");
+        } else {
+            this.startDate(`${dates[0].getFullYear()}-01-01T00:00`);
+            this.endDate(`${dates[dates.length - 1].getFullYear() + 1}-01-01T00:00`);
+        }
         this.userName("");
         this.category("");
     }
@@ -272,8 +283,7 @@ class ListViewModel {
 var vm: ListViewModel;
 
 document.addEventListener("DOMContentLoaded", async () => {
-    let resp = await fetch("/api/files");
-    let files = await resp.json();
-    ko.applyBindings(vm = new ListViewModel(files), document.getElementById("ko-area"));
+    ko.applyBindings(vm = new ListViewModel(), document.getElementById("ko-area"));
     vm.files.orderField("takenOrUploadedAt");
+    vm.loadFiles();
 }, false);

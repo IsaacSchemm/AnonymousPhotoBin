@@ -33,13 +33,19 @@ namespace AnonymousPhotoBin.Controllers {
         
         [HttpGet]
         [Route("api/files")]
-        public async Task<IEnumerable<FileMetadata>> Get() {
-            return await _context.FileMetadata.ToListAsync();
+        public async Task<IActionResult> Get() {
+            var r = BadRequestIfPasswordInvalid();
+            if (r != null) return r;
+
+            return Ok(await _context.FileMetadata.ToListAsync());
         }
 
         [HttpGet]
         [Route("api/files/{id}")]
         public async Task<IActionResult> Get(Guid id, string filename = null) {
+            var r = BadRequestIfPasswordInvalid();
+            if (r != null) return r;
+
             var photo = await _context.FileMetadata.Include(nameof(FileMetadata.FileData)).FirstOrDefaultAsync(p => p.FileMetadataId == id);
             if (photo == null) {
                 return NotFound();
@@ -52,6 +58,9 @@ namespace AnonymousPhotoBin.Controllers {
         [HttpGet]
         [Route("api/thumbnails/{id}")]
         public async Task<IActionResult> GetThumbnail(Guid id) {
+            var r = BadRequestIfPasswordInvalid();
+            if (r != null) return r;
+
             var photo = await _context.FileMetadata.Include(nameof(FileMetadata.JpegThumbnail)).FirstOrDefaultAsync(p => p.FileMetadataId == id);
             if (photo == null) {
                 return NotFound();
@@ -67,6 +76,9 @@ namespace AnonymousPhotoBin.Controllers {
         [HttpPost]
         [Route("api/files/zip")]
         public async Task<IActionResult> Zip(string ids, bool? compressed, CancellationToken token) {
+            var r = BadRequestIfPasswordInvalid();
+            if (r != null) return r;
+
             Response.ContentType = "application/zip";
             Response.Headers.Add("Content-Disposition", $"attachment;filename=photobin_{DateTime.UtcNow.ToString("yyyyMMdd - hhmmss")}.zip");
 
