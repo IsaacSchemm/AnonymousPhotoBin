@@ -43,8 +43,8 @@ namespace AnonymousPhotoBin.Controllers {
         [HttpGet]
         [Route("api/files/{id}")]
         public async Task<IActionResult> Get(Guid id, string filename = null) {
-            var r = BadRequestIfPasswordInvalid();
-            if (r != null) return r;
+            //var r = BadRequestIfPasswordInvalid();
+            //if (r != null) return r;
 
             var photo = await _context.FileMetadata.Include(nameof(FileMetadata.FileData)).FirstOrDefaultAsync(p => p.FileMetadataId == id);
             if (photo == null) {
@@ -58,8 +58,8 @@ namespace AnonymousPhotoBin.Controllers {
         [HttpGet]
         [Route("api/thumbnails/{id}")]
         public async Task<IActionResult> GetThumbnail(Guid id) {
-            var r = BadRequestIfPasswordInvalid();
-            if (r != null) return r;
+            //var r = BadRequestIfPasswordInvalid();
+            //if (r != null) return r;
 
             var photo = await _context.FileMetadata.Include(nameof(FileMetadata.JpegThumbnail)).FirstOrDefaultAsync(p => p.FileMetadataId == id);
             if (photo == null) {
