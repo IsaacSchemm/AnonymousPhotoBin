@@ -116,6 +116,7 @@ class FileUploadViewModel {
 
     reset() {
         this.files([]);
+        confirmAsync("ds <b>fsdf</b> awdsf?");
     }
 
     clearUploaded() {

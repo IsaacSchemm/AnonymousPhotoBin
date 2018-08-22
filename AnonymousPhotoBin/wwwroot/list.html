@@ -31,6 +31,10 @@
             integrity="sha256-owX7sroiO/O1a7h3a4X29A1g3QgqdNvijRQ7V5TH45M="
             crossorigin="anonymous"></script>
     <script src="lib/knockout.bindings.orderable.js"></script>
+    <!-- Date/time support in Firefox and IE -->
+    <link rel='stylesheet' type='text/css' href='css/jquery.datetimepicker.min.css' />
+    <script src="lib/jquery.datetimepicker.full.min.js"></script>
+    <script src="scripts/datetime-local-polyfill.js"></script>
     <!-- Main scripts -->
     <script src="scripts/common.js"></script>
     <script src="scripts/modals.js"></script>
@@ -66,40 +70,40 @@
             text-align: center;
             cursor: pointer;
         }
-        .file > * {
-            vertical-align: middle;
-        }
-        .file .ck {
-            margin: 0;
-        }
-        .file .ck input[type=checkbox]{
-            pointer-events: none;
-        }
-        .file img {
-            max-width: 320px;
-            height: 160px;
-        }
-        .file .details {
-            text-align: left;
-        }
-        .file .details > *{
-            white-space: nowrap;
-            overflow-x: hidden;
-            text-overflow: ellipsis;
-        }
-        .file.checked, tr.checked,
-        .file.checked a, tr.checked a {
-            background-color: #337ab7;
-            color: white;
-        }
+            .file > * {
+                vertical-align: middle;
+            }
+            .file .ck {
+                margin: 0;
+            }
+                .file .ck input[type=checkbox]{
+                    pointer-events: none;
+                }
+            .file img {
+                max-width: 320px;
+                height: 160px;
+            }
+            .file .details {
+                text-align: left;
+            }
+                .file .details > *{
+                    white-space: nowrap;
+                    overflow-x: hidden;
+                    text-overflow: ellipsis;
+                }
+            .file.checked, tr.checked,
+            .file.checked a, tr.checked a {
+                background-color: #337ab7;
+                color: white;
+            }
         @media (max-width: 340px) {
             .file {
                 width: calc(100vw - 16px);
             }
-            .file img {
-                max-width: calc(100vw - 16px);
-                height: calc(50vw - 8px);
-            }
+                .file img {
+                    max-width: calc(100vw - 16px);
+                    height: calc(50vw - 8px);
+                }
         }
         /* Bootstrap overrides */
         input[type=date].form-control, input[type=time].form-control, input[type=datetime-local].form-control, input[type=month].form-control {

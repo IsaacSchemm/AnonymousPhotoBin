@@ -11,6 +11,7 @@
   },
   "files": [
     "wwwroot/scripts/common.ts",
+    "wwwroot/scripts/datetime-local-polyfill.ts",
     "wwwroot/scripts/modals.ts",
     "wwwroot/scripts/index.ts",
     "wwwroot/scripts/list.ts"

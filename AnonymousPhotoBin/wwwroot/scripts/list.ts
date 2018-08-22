@@ -156,6 +156,7 @@ class ListViewModel {
         let resp = await this.fetchOrError("/api/files");
         let files: IFileMetadata[] = await resp.json();
         this.files(files.map(f => new FileModel(this, f)));
+        this.resetFilters();
     }
 
     private async getPassword() {
@@ -284,6 +285,7 @@ var vm: ListViewModel;
 
 document.addEventListener("DOMContentLoaded", async () => {
     ko.applyBindings(vm = new ListViewModel(), document.getElementById("ko-area"));
+    $(document.body).applyDateTimeLocalPolyfill();
     vm.files.orderField("takenOrUploadedAt");
     vm.loadFiles();
 }, false);
