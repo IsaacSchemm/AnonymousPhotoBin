@@ -16,6 +16,8 @@ To use this app, you have to deploy it yourself. The most straightforward way is
 
 3. Set up the application settings:
 
-    a. FileManagementPassword (app setting): the password required to edit file metadata ("taken by" or "category") or delete files from the server.
+    a. FileManagementPassword (app setting)
 	
-	b. DefaultConnection (connection string): the SQL connection string for the database you just set up.
+	b. DefaultConnection (SQL connection string)
+
+Users will need to enter the FileManagementPassword to view the "list" page and to edit or delete uploaded files. However, note that the URLs to download pictures are *not* password-protected (for technical reasons.)
