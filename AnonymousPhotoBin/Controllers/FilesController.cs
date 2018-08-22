@@ -76,8 +76,8 @@ namespace AnonymousPhotoBin.Controllers {
         [HttpPost]
         [Route("api/files/zip")]
         public async Task<IActionResult> Zip(string ids, bool? compressed, CancellationToken token) {
-            var r = BadRequestIfPasswordInvalid();
-            if (r != null) return r;
+            //var r = BadRequestIfPasswordInvalid();
+            //if (r != null) return r;
 
             Response.ContentType = "application/zip";
             Response.Headers.Add("Content-Disposition", $"attachment;filename=photobin_{DateTime.UtcNow.ToString("yyyyMMdd - hhmmss")}.zip");
