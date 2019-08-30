@@ -11,18 +11,18 @@ namespace AnonymousPhotoBin
 {
     public class Program
     {
-        public static IWebHost BuildWebHost(string[] args) {
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args)
+        {
             return WebHost.CreateDefaultBuilder(args)
                 .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
-                .UseStartup<Startup>()
-                .Build();
+                .UseStartup<Startup>();
         }
 
         public static void Main(string[] args)
         {
-            BuildWebHost(args).Run();
+            CreateWebHostBuilder(args).Build().Run();
         }
     }
 }

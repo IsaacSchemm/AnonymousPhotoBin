@@ -14,6 +14,7 @@ using System.Linq;
 using Microsoft.Extensions.Configuration;
 using System.IO.Compression;
 using System.Threading;
+using SixLabors.ImageSharp.Processing;
 
 namespace AnonymousPhotoBin.Controllers {
     public class FilesController : Controller {

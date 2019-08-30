@@ -9,6 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using AnonymousPhotoBin.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AnonymousPhotoBin
 {
@@ -39,7 +41,8 @@ namespace AnonymousPhotoBin
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddSingleton<IConfiguration>(Configuration);
-            services.AddMvc();
+            services.AddMvc()
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -48,8 +51,12 @@ namespace AnonymousPhotoBin
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
+            if (!env.IsDevelopment())
+                app.UseHsts();
+
             app.UseMvc();
             app.UseDefaultFiles();
+            app.UseHttpsRedirection();
             app.UseStaticFiles();
         }
     }
