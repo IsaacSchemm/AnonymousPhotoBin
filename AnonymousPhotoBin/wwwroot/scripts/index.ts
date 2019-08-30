@@ -57,6 +57,10 @@ class FileUploadViewModel {
                 this.fileProgress((data.loaded || 0) / (data.total || 0));
             }
         });
+        $("form").submit(e => {
+            e.preventDefault();
+            this.upload();
+        })
         $("input[type=file], input[type=submit]").hide();
 
         ko.applyBindings(this, document.getElementById("ko-area"));
