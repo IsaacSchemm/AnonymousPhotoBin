@@ -33,16 +33,6 @@ namespace AnonymousPhotoBin.Data {
         [Required]
         public string ContentType { get; set; }
 
-        public int FileDataId { get; set; }
-
-        public int? JpegThumbnailId { get; set; }
-
-        [ForeignKey(nameof(FileDataId))]
-        public FileData FileData { get; set; }
-
-        [ForeignKey(nameof(JpegThumbnailId))]
-        public FileData JpegThumbnail { get; set; }
-
         public string Url => $"/api/files/{this.FileMetadataId}";
 
         public string ThumbnailUrl => $"/api/thumbnails/{this.FileMetadataId}";

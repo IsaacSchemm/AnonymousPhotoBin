@@ -9,7 +9,5 @@ namespace AnonymousPhotoBin.Data {
         public PhotoBinDbContext(DbContextOptions<PhotoBinDbContext> options) : base(options) { }
 
         public DbSet<FileMetadata> FileMetadata { get; set; }
-
-        public DbSet<FileData> FileData { get; set; }
     }
 }

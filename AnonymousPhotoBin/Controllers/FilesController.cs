@@ -15,6 +15,8 @@ using Microsoft.Extensions.Configuration;
 using System.IO.Compression;
 using System.Threading;
 using SixLabors.ImageSharp.Processing;
+using Microsoft.Azure.Storage.Blob;
+using Microsoft.Azure.Storage;
 
 namespace AnonymousPhotoBin.Controllers {
     public class FilesController : Controller {
@@ -41,18 +43,33 @@ namespace AnonymousPhotoBin.Controllers {
             return Ok(await _context.FileMetadata.ToListAsync());
         }
 
+        private async Task<CloudBlobContainer> GetCloudBlobContainerAsync() {
+            CloudStorageAccount storageAccount =
+                CloudStorageAccount.Parse(_configuration["ConnectionStrings:AzureStorageConnectionString"]);
+            CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+            CloudBlobContainer container = blobClient.GetContainerReference("anonymous-photo-bin");
+            await container.CreateIfNotExistsAsync();
+            return container;
+        }
+
         [HttpGet]
         [Route("api/files/{id}")]
         public async Task<IActionResult> Get(Guid id, string filename = null) {
             //var r = BadRequestIfPasswordInvalid();
             //if (r != null) return r;
 
-            var photo = await _context.FileMetadata.Include(nameof(FileMetadata.FileData)).FirstOrDefaultAsync(p => p.FileMetadataId == id);
-            if (photo == null) {
+            var container = await GetCloudBlobContainerAsync();
+            CloudBlockBlob thumb = container.GetBlockBlobReference($"full-{id}");
+            var photo = await _context.FileMetadata.FirstOrDefaultAsync(p => p.FileMetadataId == id);
+            if (!await thumb.ExistsAsync()) {
                 return NotFound();
             } else {
-                Response.Headers.Add("Content-Disposition", $"inline;filename={photo.NewFilename}");
-                return File(photo.FileData.Data, photo.ContentType);
+                Response.Headers.Add("Content-Disposition", $"inline;filename={photo?.NewFilename ?? "image.jpg"}");
+                using (var ms = new MemoryStream())
+                {
+                    await thumb.DownloadToStreamAsync(ms);
+                    return File(ms.ToArray(), photo?.ContentType ?? "image/jpeg");
+                }
             }
         }
 
@@ -62,15 +79,19 @@ namespace AnonymousPhotoBin.Controllers {
             //var r = BadRequestIfPasswordInvalid();
             //if (r != null) return r;
 
-            var photo = await _context.FileMetadata.Include(nameof(FileMetadata.JpegThumbnail)).FirstOrDefaultAsync(p => p.FileMetadataId == id);
-            if (photo == null) {
-                return NotFound();
-            } else if (photo.JpegThumbnail == null) {
-                return photo.ContentType.StartsWith("image/")
-                    ? await Get(id)
-                    : Redirect("/images/blank.gif");
-            } else {
-                return File(photo.JpegThumbnail.Data, "image/jpeg");
+            var container = await GetCloudBlobContainerAsync();
+            CloudBlockBlob thumb = container.GetBlockBlobReference($"thumb-{id}");
+            if (await thumb.ExistsAsync())
+            {
+                using (var ms = new MemoryStream())
+                {
+                    await thumb.DownloadToStreamAsync(ms);
+                    return File(ms.ToArray(), "image/jpeg");
+                }
+            }
+            else
+            {
+                return Redirect("/images/blank.gif");
             }
         }
 
@@ -113,15 +134,24 @@ namespace AnonymousPhotoBin.Controllers {
                 using (var archive = new ZipArchive(s, ZipArchiveMode.Create, true)) {
                     foreach (var file in fileMetadata) {
                         token.ThrowIfCancellationRequested();
-                        byte[] data = await _context.FileData
-                            .Where(d => d.FileDataId == file.FileDataId)
-                            .Select(d => d.Data)
-                            .SingleAsync();
 
-                        var entry = archive.CreateEntry(file.NewFilename, compressionLevel);
-                        entry.LastWriteTime = file.UploadedAt;
-                        using (var zipStream = entry.Open()) {
-                            await zipStream.WriteAsync(data, 0, data.Length);
+                        var container = await GetCloudBlobContainerAsync();
+                        CloudBlockBlob full = container.GetBlockBlobReference($"full-{file.FileMetadataId}");
+                        if (!await full.ExistsAsync())
+                        {
+                            throw new Exception($"{file.FileMetadataId} not found");
+                        }
+
+                        using (var ms = new MemoryStream())
+                        {
+                            await full.DownloadToStreamAsync(ms);
+                            byte[] data = ms.ToArray();
+
+                            var entry = archive.CreateEntry(file.NewFilename, compressionLevel);
+                            entry.LastWriteTime = file.UploadedAt;
+                            using (var zipStream = entry.Open()) {
+                                await zipStream.WriteAsync(data, 0, data.Length);
+                            }
                         }
                     }
                 }
@@ -151,7 +181,7 @@ namespace AnonymousPhotoBin.Controllers {
                         int? width = null;
                         int? height = null;
                         string takenAt = null;
-                        FileData thumbnail = null;
+                        byte[] thumbnail = null;
                         try {
                             using (var image = Image.Load(data)) {
                                 width = image.Width;
@@ -176,9 +206,7 @@ namespace AnonymousPhotoBin.Controllers {
 
                                     using (var jpegThumb = new MemoryStream()) {
                                         image.SaveAsJpeg(jpegThumb);
-                                        thumbnail = new FileData {
-                                            Data = jpegThumb.ToArray()
-                                        };
+                                        thumbnail = jpegThumb.ToArray();
                                     }
                                 }
                             }
@@ -199,14 +227,19 @@ namespace AnonymousPhotoBin.Controllers {
                             Category = category,
                             Size = data.Length,
                             Sha256 = hash,
-                            ContentType = file.ContentType,
-                            FileData = new FileData {
-                                Data = data
-                            },
-                            JpegThumbnail = thumbnail
+                            ContentType = file.ContentType
                         };
                         _context.FileMetadata.Add(f);
                         await _context.SaveChangesAsync();
+
+                        var container = await GetCloudBlobContainerAsync();
+                        if (thumbnail != null)
+                        {
+                            CloudBlockBlob thumb = container.GetBlockBlobReference($"thumb-{f.FileMetadataId}");
+                            await thumb.UploadFromByteArrayAsync(thumbnail, 0, thumbnail.Length);
+                        }
+                        CloudBlockBlob full = container.GetBlockBlobReference($"full-{f.FileMetadataId}");
+                        await full.UploadFromByteArrayAsync(data, 0, data.Length);
 
                         l.Add(f);
                     }
@@ -276,14 +309,13 @@ namespace AnonymousPhotoBin.Controllers {
             if (f == null) {
                 return NotFound();
             } else {
+                var container = await GetCloudBlobContainerAsync();
+                CloudBlockBlob full = container.GetBlockBlobReference($"full-{id}");
+                await full.DeleteIfExistsAsync();
+                CloudBlockBlob thumb = container.GetBlockBlobReference($"thumb-{id}");
+                await thumb.DeleteIfExistsAsync();
+
                 _context.FileMetadata.Remove(f);
-                _context.FileData.RemoveRange(
-                    from d in _context.FileData
-                    where new int?[] {
-                        f.FileDataId,
-                        f.JpegThumbnailId
-                    }.Contains(d.FileDataId)
-                    select d);
                 await _context.SaveChangesAsync();
                 return NoContent();
             }
