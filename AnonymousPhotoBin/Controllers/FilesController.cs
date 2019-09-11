@@ -85,7 +85,7 @@ namespace AnonymousPhotoBin.Controllers {
             //if (r != null) return r;
 
             Response.ContentType = "application/zip";
-            Response.Headers.Add("Content-Disposition", $"attachment;filename=photobin_{DateTime.UtcNow.ToString("yyyyMMdd - hhmmss")}.zip");
+            Response.Headers.Add("Content-Disposition", $"attachment;filename=photobin_{DateTime.UtcNow.ToString("yyyyMMdd-hhmmss")}.zip");
 
             IEnumerable<Guid> guids = ids.Split('\r', '\n', ',', ';').Where(s => s != "").Select(s => Guid.Parse(s));
             var fileMetadata = await _context.FileMetadata.Where(f => guids.Contains(f.FileMetadataId)).ToListAsync();
@@ -125,15 +125,18 @@ namespace AnonymousPhotoBin.Controllers {
                             throw new Exception($"{file.FileMetadataId} not found");
                         }
 
-                        using (var ms = new MemoryStream())
-                        {
-                            await full.DownloadToStreamAsync(ms);
-                            byte[] data = ms.ToArray();
 
-                            var entry = archive.CreateEntry(file.NewFilename, compressionLevel);
-                            entry.LastWriteTime = file.UploadedAt;
-                            using (var zipStream = entry.Open()) {
-                                await zipStream.WriteAsync(data, 0, data.Length);
+                        var entry = archive.CreateEntry(file.NewFilename, compressionLevel);
+                        entry.LastWriteTime = file.UploadedAt;
+                        byte[] data = new byte[1024 * 1024 * 8];
+                        using (var zipStream = entry.Open())
+                        {
+                            for (int offset = 0; offset < file.Size; offset += data.Length)
+                            {
+                                int length = Math.Min(data.Length, file.Size - offset);
+
+                                await full.DownloadRangeToByteArrayAsync(data, 0, offset, length);
+                                await zipStream.WriteAsync(data, 0, length);
                             }
                         }
                     }
