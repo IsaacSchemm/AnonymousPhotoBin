@@ -49,6 +49,10 @@ namespace AnonymousPhotoBin.Controllers {
             CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
             CloudBlobContainer container = blobClient.GetContainerReference("anonymous-photo-bin");
             await container.CreateIfNotExistsAsync();
+            await container.SetPermissionsAsync(new BlobContainerPermissions
+            {
+                PublicAccess = BlobContainerPublicAccessType.Blob
+            });
             return container;
         }
 
@@ -59,18 +63,8 @@ namespace AnonymousPhotoBin.Controllers {
             //if (r != null) return r;
 
             var container = await GetCloudBlobContainerAsync();
-            CloudBlockBlob thumb = container.GetBlockBlobReference($"full-{id}");
-            var photo = await _context.FileMetadata.FirstOrDefaultAsync(p => p.FileMetadataId == id);
-            if (!await thumb.ExistsAsync()) {
-                return NotFound();
-            } else {
-                Response.Headers.Add("Content-Disposition", $"inline;filename={photo?.NewFilename ?? "image.jpg"}");
-                using (var ms = new MemoryStream())
-                {
-                    await thumb.DownloadToStreamAsync(ms);
-                    return File(ms.ToArray(), photo?.ContentType ?? "image/jpeg");
-                }
-            }
+            CloudBlockBlob full = container.GetBlockBlobReference($"full-{id}");
+            return Redirect(full.Uri.AbsoluteUri);
         }
 
         [HttpGet]
@@ -81,18 +75,7 @@ namespace AnonymousPhotoBin.Controllers {
 
             var container = await GetCloudBlobContainerAsync();
             CloudBlockBlob thumb = container.GetBlockBlobReference($"thumb-{id}");
-            if (await thumb.ExistsAsync())
-            {
-                using (var ms = new MemoryStream())
-                {
-                    await thumb.DownloadToStreamAsync(ms);
-                    return File(ms.ToArray(), "image/jpeg");
-                }
-            }
-            else
-            {
-                return Redirect("/images/blank.gif");
-            }
+            return Redirect(thumb.Uri.AbsoluteUri);
         }
 
         [HttpPost]
@@ -236,9 +219,11 @@ namespace AnonymousPhotoBin.Controllers {
                         if (thumbnail != null)
                         {
                             CloudBlockBlob thumb = container.GetBlockBlobReference($"thumb-{f.FileMetadataId}");
+                            thumb.Properties.ContentType = "image/jpeg";
                             await thumb.UploadFromByteArrayAsync(thumbnail, 0, thumbnail.Length);
                         }
                         CloudBlockBlob full = container.GetBlockBlobReference($"full-{f.FileMetadataId}");
+                        full.Properties.ContentType = file.ContentType;
                         await full.UploadFromByteArrayAsync(data, 0, data.Length);
 
                         l.Add(f);
@@ -291,7 +276,7 @@ namespace AnonymousPhotoBin.Controllers {
                 // Null in patch means field was not included.
                 if (patch.UserName != null) f.UserName = patch.UserName;
                 if (patch.Category != null) f.Category = patch.Category;
-                // Database should store null for consistency.
+                // Database should store null instead of empty string for consistency.
                 if (f.UserName == "") f.UserName = null;
                 if (f.Category == "") f.Category = null;
                 await _context.SaveChangesAsync();
