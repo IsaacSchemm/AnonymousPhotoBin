@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.12
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29230.47
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnonymousPhotoBin", "AnonymousPhotoBin\AnonymousPhotoBin.csproj", "{CC43EDF8-742A-49F0-A1A4-698BEA47B099}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AnonymousPhotoBin", "AnonymousPhotoBin\AnonymousPhotoBin.csproj", "{CC43EDF8-742A-49F0-A1A4-698BEA47B099}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AnonymousPhotoBin.Storage", "AnonymousPhotoBin.Storage\AnonymousPhotoBin.Storage.fsproj", "{106279C8-20F0-43E3-973B-8E5D684281DB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{CC43EDF8-742A-49F0-A1A4-698BEA47B099}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC43EDF8-742A-49F0-A1A4-698BEA47B099}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CC43EDF8-742A-49F0-A1A4-698BEA47B099}.Release|Any CPU.Build.0 = Release|Any CPU
+		{106279C8-20F0-43E3-973B-8E5D684281DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{106279C8-20F0-43E3-973B-8E5D684281DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{106279C8-20F0-43E3-973B-8E5D684281DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{106279C8-20F0-43E3-973B-8E5D684281DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

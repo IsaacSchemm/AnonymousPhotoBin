@@ -27,6 +27,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AnonymousPhotoBin.Storage\AnonymousPhotoBin.Storage.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <TypeScriptCompile Include="wwwroot\scripts\datetime-local-polyfill.ts" />
     <TypeScriptCompile Include="wwwroot\scripts\modals.ts" />
     <TypeScriptCompile Include="wwwroot\scripts\list.ts" />
