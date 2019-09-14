@@ -38,7 +38,7 @@
         this.newFilename = m.newFilename;
 
         this.url = m.url;
-        this.thumbnailUrl = m.thumbnailUrl;
+        this.thumbnailUrl = `/api/thumbnails/${m.id}`;
         this.checked = ko.observable(false);
 
         this.takenAtStr = ko.pureComputed(() => this.takenAt && this.takenAt.toLocaleString());
@@ -262,7 +262,7 @@ class ListViewModel {
         if (await confirmAsync(`Are you sure you want to permanently delete ${this.selectedFiles().length} file(s) from the server?`)) {
             try {
                 for (const f of this.selectedFiles()) {
-                    const response = await this.fetchOrError(f.url, {
+                    const response = await this.fetchOrError(`/api/photos/${f.id}`, {
                         method: "DELETE"
                     });
                     this.files.remove(f);

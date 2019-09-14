@@ -13,6 +13,5 @@ interface IExistingPhotoMetadata {
     category: string | null;
     size: number;
     url: string;
-    thumbnailUrl: string;
     newFilename: string;
 }

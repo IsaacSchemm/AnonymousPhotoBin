@@ -24,6 +24,26 @@ namespace AnonymousPhotoBin.Controllers {
 
         private readonly IConfiguration _configuration;
 
+        private enum ContainerType
+        {
+            FULL,
+            THUMBNAILS
+        }
+
+        private async Task<CloudBlobContainer> GetCloudBlobContainerAsync(ContainerType type)
+        {
+            CloudStorageAccount storageAccount =
+                CloudStorageAccount.Parse(_configuration["ConnectionStrings:BlobStorageConnectionString"]);
+            CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
+            CloudBlobContainer container = blobClient.GetContainerReference(type == ContainerType.FULL ? "anonymous-photo-bin-full" : "anonymous-photo-bin-thumbnails");
+            await container.CreateIfNotExistsAsync();
+            await container.SetPermissionsAsync(new BlobContainerPermissions
+            {
+                PublicAccess = BlobContainerPublicAccessType.Blob
+            });
+            return container;
+        }
+
         public FilesController(IConfiguration configuration) {
             _configuration = configuration;
         }
@@ -34,21 +54,8 @@ namespace AnonymousPhotoBin.Controllers {
             var r = BadRequestIfPasswordInvalid();
             if (r != null) return r;
 
-            var container = await GetCloudBlobContainerAsync();
+            var container = await GetCloudBlobContainerAsync(ContainerType.FULL);
             return Ok(await PhotoAccess.GetExistingPhotoMetadataAsync(container, limit ?? int.MaxValue));
-        }
-
-        private async Task<CloudBlobContainer> GetCloudBlobContainerAsync() {
-            CloudStorageAccount storageAccount =
-                CloudStorageAccount.Parse(_configuration["ConnectionStrings:BlobStorageConnectionString"]);
-            CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
-            CloudBlobContainer container = blobClient.GetContainerReference("anonymous-photo-bin");
-            await container.CreateIfNotExistsAsync();
-            await container.SetPermissionsAsync(new BlobContainerPermissions
-            {
-                PublicAccess = BlobContainerPublicAccessType.Blob
-            });
-            return container;
         }
 
         [HttpGet]
@@ -57,8 +64,8 @@ namespace AnonymousPhotoBin.Controllers {
             //var r = BadRequestIfPasswordInvalid();
             //if (r != null) return r;
 
-            var container = await GetCloudBlobContainerAsync();
-            CloudBlockBlob full = container.GetBlockBlobReference($"full-{id}");
+            var container = await GetCloudBlobContainerAsync(ContainerType.FULL);
+            CloudBlockBlob full = container.GetBlockBlobReference($"{id}");
             return Redirect(full.Uri.AbsoluteUri);
         }
 
@@ -68,8 +75,8 @@ namespace AnonymousPhotoBin.Controllers {
             //var r = BadRequestIfPasswordInvalid();
             //if (r != null) return r;
 
-            var container = await GetCloudBlobContainerAsync();
-            CloudBlockBlob thumb = container.GetBlockBlobReference($"thumb-{id}");
+            var container = await GetCloudBlobContainerAsync(ContainerType.THUMBNAILS);
+            CloudBlockBlob thumb = container.GetBlockBlobReference($"{id}");
             return Redirect(thumb.Uri.AbsoluteUri);
         }
 
@@ -82,7 +89,7 @@ namespace AnonymousPhotoBin.Controllers {
             Response.ContentType = "application/zip";
             Response.Headers.Add("Content-Disposition", $"attachment;filename=photobin_{DateTime.UtcNow.ToString("yyyyMMdd-hhmmss")}.zip");
 
-            var container = await GetCloudBlobContainerAsync();
+            var container = await GetCloudBlobContainerAsync(ContainerType.FULL);
             IEnumerable<Guid> guids = ids.Split('\r', '\n', ',', ';').Where(s => s != "").Select(s => Guid.Parse(s));
             ExistingPhotoMetadata[] fileMetadata = await PhotoAccess.GetExistingPhotoMetadataByIdsAsync(container, guids);
 
@@ -114,7 +121,7 @@ namespace AnonymousPhotoBin.Controllers {
                     foreach (var file in fileMetadata) {
                         token.ThrowIfCancellationRequested();
 
-                        CloudBlockBlob full = container.GetBlockBlobReference($"full-{file.Id}");
+                        CloudBlockBlob full = container.GetBlockBlobReference($"{file.Id}");
                         if (!await full.ExistsAsync())
                         {
                             throw new Exception($"{file.Id} not found");
@@ -146,6 +153,8 @@ namespace AnonymousPhotoBin.Controllers {
         [RequestSizeLimit(105000000)]
         public async Task<List<ExistingPhotoMetadata>> Post(List<IFormFile> files, string userName = null, string category = null) {
             List<ExistingPhotoMetadata> l = new List<ExistingPhotoMetadata>();
+            var container_full = await GetCloudBlobContainerAsync(ContainerType.FULL);
+            var container_thumb = await GetCloudBlobContainerAsync(ContainerType.THUMBNAILS);
             foreach (var file in files) {
                 using (var ms = new MemoryStream()) {
                     await file.OpenReadStream().CopyToAsync(ms);
@@ -198,27 +207,27 @@ namespace AnonymousPhotoBin.Controllers {
                             takenAtDateTime = dt;
                         }
 
-                        var container = await GetCloudBlobContainerAsync();
-                        var f = await PhotoAccess.UploadPhotoAsync(container, new NewPhoto
+                        var f = await PhotoAccess.UploadPhotoAsync(container_full, new NewPhoto
                         {
                             Photo = new DataAndContentType(data, file.ContentType),
-                            Thumbnail = new DataAndContentType(thumbnail, "image/jpeg"),
                             TakenAt = takenAtDateTime,
                             OriginalFilename = Path.GetFileName(file.FileName),
                             UserName = userName,
                             Category = category
                         });
+                        l.Add(f);
+
                         if (thumbnail != null)
                         {
-                            CloudBlockBlob thumb = container.GetBlockBlobReference($"thumb-{f.Id}");
-                            thumb.Properties.ContentType = "image/jpeg";
-                            await thumb.UploadFromByteArrayAsync(thumbnail, 0, thumbnail.Length);
+                            await PhotoAccess.UploadPhotoAsync(container_thumb, new NewPhoto
+                            {
+                                Photo = new DataAndContentType(thumbnail, "image/jpeg"),
+                                TakenAt = takenAtDateTime,
+                                OriginalFilename = Path.GetFileName(file.FileName),
+                                UserName = userName,
+                                Category = category
+                            });
                         }
-                        CloudBlockBlob full = container.GetBlockBlobReference($"full-{f.Id}");
-                        full.Properties.ContentType = file.ContentType;
-                        await full.UploadFromByteArrayAsync(data, 0, data.Length);
-
-                        l.Add(f);
                     }
                 }
             }
@@ -261,8 +270,13 @@ namespace AnonymousPhotoBin.Controllers {
             var r = BadRequestIfPasswordInvalid();
             if (r != null) return r;
 
-            var container = await GetCloudBlobContainerAsync();
-            await PhotoAccess.DeletePhotoAsync(container, id);
+            var containers = new[]{
+                await GetCloudBlobContainerAsync(ContainerType.FULL),
+                await GetCloudBlobContainerAsync(ContainerType.THUMBNAILS)
+            };
+            foreach (var container in containers)
+                await PhotoAccess.DeletePhotoAsync(container, id);
+
             return NoContent();
         }
     }

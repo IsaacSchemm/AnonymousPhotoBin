@@ -6,11 +6,6 @@ open System
 open FSharp.Control
 open System.Collections.Generic
 
-type FullPhotoBlob = {
-    Id: Guid
-    Blob: CloudBlockBlob
-}
-
 module PhotoAccess =
     let AsyncGetAllBlobs (container: CloudBlobContainer) = asyncSeq {
         let mutable token: BlobContinuationToken = null
@@ -26,20 +21,8 @@ module PhotoAccess =
             | t -> token <- t
     }
 
-    let ToFullPhotoBlob (blob: CloudBlockBlob) =
-        if blob.Name.StartsWith("full-") then
-            match blob.Name.Replace("full-", "") |> Guid.TryParse with
-            | (true, g) -> Some { Id = g; Blob = blob }
-            | (false, _) -> None
-        else
-            None
-
-    let AsyncGetFullPhotoBlobs container =
-        AsyncGetAllBlobs container
-        |> AsyncSeq.choose ToFullPhotoBlob
-
-    let GetFullPhotoBlobsAsync c limit =
-        AsyncGetFullPhotoBlobs c
+    let GetAllBlobsAsync c limit =
+        AsyncGetAllBlobs c
         |> AsyncSeq.take limit
         |> AsyncSeq.toArrayAsync
         |> Async.StartAsTask
@@ -49,27 +32,28 @@ module PhotoAccess =
         | (true, x) -> Some x
         | (false, _) -> None
 
-    let AsyncToExistingPhotoMetadata (photo: FullPhotoBlob) = async {
-        let thumb = sprintf "thumb-%O" photo.Id |> photo.Blob.Container.GetBlockBlobReference
+    let AsyncToExistingPhotoMetadata (blob: CloudBlockBlob) = async {
+        sprintf "Fetching metadata for %s" blob.Name |> System.Diagnostics.Debug.WriteLine
+        do! blob.FetchAttributesAsync() |> Async.AwaitTask
+        let metadata = blob.Metadata
 
-        do! photo.Blob.FetchAttributesAsync() |> Async.AwaitTask
-        let metadata = photo.Blob.Metadata
-
-        return Some {
-            Id = photo.Id
-            TakenAt = metadata |> GetValueIfAny "TakenAt" |> Option.map DateTimeOffset.Parse |> Option.toNullable
-            UploadedAt = photo.Blob.Properties.LastModified
-            OriginalFilename = metadata |> GetValueIfAny "OriginalFilename" |> Option.toObj
-            UserName = metadata |> GetValueIfAny "UserName" |> Option.toObj
-            Category = metadata |> GetValueIfAny "Category" |> Option.toObj
-            Size = photo.Blob.Properties.Length
-            Url = photo.Blob.Uri.AbsoluteUri
-            ThumbnailUrl = thumb.Uri.AbsoluteUri
-        }
+        return
+            match blob.Name |> Guid.TryParse with
+            | (false, _) -> None
+            | (true, id) -> Some {
+                Id = id
+                TakenAt = metadata |> GetValueIfAny "TakenAt" |> Option.map DateTimeOffset.Parse |> Option.toNullable
+                UploadedAt = blob.Properties.LastModified
+                OriginalFilename = metadata |> GetValueIfAny "OriginalFilename" |> Option.toObj
+                UserName = metadata |> GetValueIfAny "UserName" |> Option.toObj
+                Category = metadata |> GetValueIfAny "Category" |> Option.toObj
+                Size = blob.Properties.Length
+                Url = blob.Uri.AbsoluteUri
+            }
     }
 
     let AsyncGetExistingPhotoMetadata c =
-        AsyncGetFullPhotoBlobs c
+        AsyncGetAllBlobs c
         |> AsyncSeq.chooseAsync AsyncToExistingPhotoMetadata
     
     let GetExistingPhotoMetadataAsync c limit =
@@ -80,10 +64,9 @@ module PhotoAccess =
 
     let AsyncGetExistingPhotoMetadataByIds (container: CloudBlobContainer) (ids: seq<Guid>) =
         ids
-        |> Seq.map (sprintf "full-%O")
+        |> Seq.map (sprintf "%O")
         |> Seq.map container.GetBlockBlobReference
         |> AsyncSeq.ofSeq
-        |> AsyncSeq.choose ToFullPhotoBlob
         |> AsyncSeq.chooseAsync AsyncToExistingPhotoMetadata
 
     let GetExistingPhotoMetadataByIdsAsync container ids =
@@ -92,16 +75,13 @@ module PhotoAccess =
         |> Async.StartAsTask
 
     let AsyncDeletePhoto (container: CloudBlobContainer) (id: Guid) = async {
-        let full =
+        let blob =
             id
-            |> sprintf "full-%O"
+            |> sprintf "%O"
             |> container.GetBlockBlobReference
-        let thumb =
-            id
-            |> sprintf "full-%O"
-            |> container.GetBlockBlobReference
-        for blob in [full; thumb] do
-            do! blob.DeleteIfExistsAsync() |> Async.AwaitTask |> Async.Ignore
+        do! blob.DeleteIfExistsAsync()
+            |> Async.AwaitTask
+            |> Async.Ignore
     }
 
     let DeletePhotoAsync container id =
@@ -121,15 +101,7 @@ module PhotoAccess =
     }
 
     let AsyncUploadPhoto (container: CloudBlobContainer) (photo: INewPhoto) = async {
-        if isNull photo.Photo then
-            nullArg "photo.Photo"
-
-        if not (isNull photo.Thumbnail) then
-            let! thumb = photo.Id |> sprintf "thumb-%O" |> AsyncGetBlobIfDoesNotExist container
-            thumb.Properties.ContentType <- photo.Thumbnail.ContentType
-            do! AsyncUploadBlob thumb photo.Thumbnail.Data
-
-        let! full = photo.Id |> sprintf "full-%O" |> AsyncGetBlobIfDoesNotExist container
+        let! full = photo.Id |> sprintf "%O" |> AsyncGetBlobIfDoesNotExist container
         full.Properties.ContentType <- photo.Photo.ContentType
         if photo.TakenAt.HasValue then
             full.Metadata.Add("TakenAt", photo.TakenAt.Value.ToString("o"))
@@ -141,9 +113,7 @@ module PhotoAccess =
             full.Metadata.Add("Category", photo.Category)
         do! AsyncUploadBlob full photo.Photo.Data
 
-        let! now_exists =
-            { Id = photo.Id; Blob = full }
-            |> AsyncToExistingPhotoMetadata
+        let! now_exists = AsyncToExistingPhotoMetadata full
         return Option.get now_exists
     }
 

@@ -12,7 +12,6 @@ type ExistingPhotoMetadata = {
     Category: string
     Size: int64
     Url: string
-    ThumbnailUrl: string
 } with
     member this.NewFilename =
         let originalFilename = this.OriginalFilename |> Option.ofObj |> Option.defaultValue "untitled.jpg"

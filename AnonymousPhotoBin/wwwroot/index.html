@@ -127,7 +127,7 @@
         <br />
         <!-- ko foreach: uploaded -->
         <a href="#" target="_blank" data-bind="attr: { href: url }">
-            <img data-bind="attr: { src: thumbnailUrl }" />
+            <img data-bind="attr: { src: '/api/thumbnails/' + id }" />
         </a>
         <div data-bind="text: originalFilename"></div>
         <br />
