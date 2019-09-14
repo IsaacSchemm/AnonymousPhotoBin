@@ -35,12 +35,12 @@ namespace AnonymousPhotoBin.Controllers {
             if (r != null) return r;
 
             var container = await GetCloudBlobContainerAsync();
-            return Ok(await PhotoAccess.GetExistingPhotosAsync(container, limit ?? int.MaxValue));
+            return Ok(await PhotoAccess.GetExistingPhotoMetadataAsync(container, limit ?? int.MaxValue));
         }
 
         private async Task<CloudBlobContainer> GetCloudBlobContainerAsync() {
             CloudStorageAccount storageAccount =
-                CloudStorageAccount.Parse(_configuration["ConnectionStrings:AzureStorageConnectionString"]);
+                CloudStorageAccount.Parse(_configuration["ConnectionStrings:BlobStorageConnectionString"]);
             CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
             CloudBlobContainer container = blobClient.GetContainerReference("anonymous-photo-bin");
             await container.CreateIfNotExistsAsync();
@@ -84,7 +84,7 @@ namespace AnonymousPhotoBin.Controllers {
 
             var container = await GetCloudBlobContainerAsync();
             IEnumerable<Guid> guids = ids.Split('\r', '\n', ',', ';').Where(s => s != "").Select(s => Guid.Parse(s));
-            ExistingPhoto[] fileMetadata = await PhotoAccess.GetExistingPhotosByIdsAsync(container, guids);
+            ExistingPhotoMetadata[] fileMetadata = await PhotoAccess.GetExistingPhotoMetadataByIdsAsync(container, guids);
 
             var compressionLevel = compressed == true
                 ? CompressionLevel.Optimal
@@ -144,8 +144,8 @@ namespace AnonymousPhotoBin.Controllers {
         [HttpPost]
         [Route("api/files")]
         [RequestSizeLimit(105000000)]
-        public async Task<List<ExistingPhoto>> Post(List<IFormFile> files, string userName = null, string category = null) {
-            List<ExistingPhoto> l = new List<ExistingPhoto>();
+        public async Task<List<ExistingPhotoMetadata>> Post(List<IFormFile> files, string userName = null, string category = null) {
+            List<ExistingPhotoMetadata> l = new List<ExistingPhotoMetadata>();
             foreach (var file in files) {
                 using (var ms = new MemoryStream()) {
                     await file.OpenReadStream().CopyToAsync(ms);

@@ -3,7 +3,7 @@ namespace AnonymousPhotoBin.Storage
 open System
 open System.IO
 
-type ExistingPhoto = {
+type ExistingPhotoMetadata = {
     Id: Guid
     TakenAt: Nullable<DateTimeOffset>
     UploadedAt: Nullable<DateTimeOffset>

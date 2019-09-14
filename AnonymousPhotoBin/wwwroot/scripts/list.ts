@@ -9,6 +9,7 @@
 
     readonly url: string;
     readonly thumbnailUrl: string;
+    readonly newFilename: string;
 
     checked: KnockoutObservable<boolean>;
 
@@ -18,7 +19,7 @@
     readonly takenAtStr: KnockoutComputed<string | null>;
     readonly uploadedAtStr: KnockoutComputed<string>;
 
-    constructor(readonly parent: ListViewModel, m: IExistingPhoto) {
+    constructor(readonly parent: ListViewModel, m: IExistingPhotoMetadata) {
         this.id = m.id;
         this.takenAt = m.takenAt instanceof Date ? m.takenAt
             : m.takenAt != null ? new Date(m.takenAt)
@@ -34,6 +35,7 @@
         this.sizeStr = this.size >= 1048576 ? `${(this.size / 1048576).toFixed(2)} MiB`
             : this.size >= 1024 ? `${(this.size / 1024).toFixed(2)} KiB`
                 : `${this.size} bytes`;
+        this.newFilename = m.newFilename;
 
         this.url = m.url;
         this.thumbnailUrl = m.thumbnailUrl;
@@ -146,7 +148,7 @@ class ListViewModel {
 
     async loadFiles() {
         let resp = await this.fetchOrError("/api/files");
-        let files: IExistingPhoto[] = await resp.json();
+        let files: IExistingPhotoMetadata[] = await resp.json();
         this.files(files.map(f => new FileModel(this, f)));
         this.resetFilters();
     }

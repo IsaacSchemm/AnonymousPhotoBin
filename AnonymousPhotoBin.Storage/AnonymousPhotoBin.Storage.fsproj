@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <Compile Include="INewPhoto.fs" />
-    <Compile Include="ExistingPhoto.fs" />
+    <Compile Include="ExistingPhotoMetadata.fs" />
     <Compile Include="PhotoAccess.fs" />
   </ItemGroup>
 

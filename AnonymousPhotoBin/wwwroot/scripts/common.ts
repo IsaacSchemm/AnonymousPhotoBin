@@ -4,7 +4,7 @@
 
 interface Iterable<T> { }
 
-interface IExistingPhoto {
+interface IExistingPhotoMetadata {
     id: string;
     takenAt: Date | string | null;
     uploadedAt: Date | string;
@@ -14,4 +14,5 @@ interface IExistingPhoto {
     size: number;
     url: string;
     thumbnailUrl: string;
+    newFilename: string;
 }
