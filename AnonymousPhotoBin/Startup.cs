@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using AnonymousPhotoBin.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -36,10 +35,6 @@ namespace AnonymousPhotoBin
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add framework services.
-            services.AddDbContext<PhotoBinDbContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("SqlConnectionString")));
-
             services.AddSingleton<IConfiguration>(Configuration);
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);

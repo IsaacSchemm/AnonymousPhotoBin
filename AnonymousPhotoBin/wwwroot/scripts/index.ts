@@ -11,7 +11,7 @@ class FileUploadViewModel {
     readonly totalProgress: KnockoutObservable<number>;
     readonly caption2: KnockoutObservable<string | null>;
     readonly errors: KnockoutObservableArray<string>;
-    readonly uploaded: KnockoutObservableArray<IFileMetadata>;
+    readonly uploaded: KnockoutObservableArray<IExistingPhoto>;
     readonly showUploaded: KnockoutObservable<boolean>;
     readonly uploading: KnockoutObservable<boolean>;
 
@@ -92,7 +92,7 @@ class FileUploadViewModel {
                 this.caption1(`Uploading ${data.files[0].name}...`);
 
                 await data.process();
-                let result: IFileMetadata[] = await data.submit();
+                let result: IExistingPhoto[] = await data.submit();
                 
                 for (const f of result) {
                     this.uploaded.unshift(f);

@@ -1,18 +1,14 @@
 ﻿class FileModel {
-    readonly fileMetadataId: string;
-    readonly width: number;
-    readonly height: number;
+    readonly id: string;
     readonly takenAt: Date | null;
     readonly uploadedAt: Date;
     readonly originalFilename: string;
     readonly userName: KnockoutObservable<string>;
     readonly category: KnockoutObservable<string>;
     readonly size: number;
-    readonly contentType: string;
 
     readonly url: string;
     readonly thumbnailUrl: string;
-    readonly newFilename: string;
 
     checked: KnockoutObservable<boolean>;
 
@@ -22,10 +18,8 @@
     readonly takenAtStr: KnockoutComputed<string | null>;
     readonly uploadedAtStr: KnockoutComputed<string>;
 
-    constructor(readonly parent: ListViewModel, m: IFileMetadata) {
-        this.fileMetadataId = m.fileMetadataId;
-        this.width = m.width;
-        this.height = m.height;
+    constructor(readonly parent: ListViewModel, m: IExistingPhoto) {
+        this.id = m.id;
         this.takenAt = m.takenAt instanceof Date ? m.takenAt
             : m.takenAt != null ? new Date(m.takenAt)
             : null;
@@ -40,8 +34,6 @@
         this.sizeStr = this.size >= 1048576 ? `${(this.size / 1048576).toFixed(2)} MiB`
             : this.size >= 1024 ? `${(this.size / 1024).toFixed(2)} KiB`
                 : `${this.size} bytes`;
-        this.contentType = m.contentType;
-        this.newFilename = m.newFilename;
 
         this.url = m.url;
         this.thumbnailUrl = m.thumbnailUrl;
@@ -154,7 +146,7 @@ class ListViewModel {
 
     async loadFiles() {
         let resp = await this.fetchOrError("/api/files");
-        let files: IFileMetadata[] = await resp.json();
+        let files: IExistingPhoto[] = await resp.json();
         this.files(files.map(f => new FileModel(this, f)));
         this.resetFilters();
     }
@@ -212,7 +204,7 @@ class ListViewModel {
             .appendTo(document.body);
         $("<textarea></textarea>")
             .attr("name", "ids")
-            .text(this.selectedFiles().map(f => f.fileMetadataId).join(","))
+            .text(this.selectedFiles().map(f => f.id).join(","))
             .appendTo(f);
         f.submit().remove();
     }

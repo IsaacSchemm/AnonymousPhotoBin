@@ -1,12 +1,21 @@
 namespace AnonymousPhotoBin.Storage
 
 open System
+open System.IO
 
-type IExistingPhoto =
-    abstract member Id: Guid
-    abstract member TakenAt: Nullable<DateTimeOffset>
-    abstract member UploadedAt: Nullable<DateTimeOffset>
-    abstract member OriginalFilename: string
-    abstract member UserName: string
-    abstract member Category: string
-    abstract member Size: int64
+type ExistingPhoto = {
+    Id: Guid
+    TakenAt: Nullable<DateTimeOffset>
+    UploadedAt: Nullable<DateTimeOffset>
+    OriginalFilename: string
+    UserName: string
+    Category: string
+    Size: int64
+    Url: string
+    ThumbnailUrl: string
+} with
+    member this.NewFilename =
+        let originalFilename = this.OriginalFilename |> Option.ofObj |> Option.defaultValue "untitled.jpg"
+        let basename = Path.GetFileNameWithoutExtension originalFilename
+        let ext = Path.GetExtension originalFilename
+        sprintf "%s (%O)%s" basename this.Id ext

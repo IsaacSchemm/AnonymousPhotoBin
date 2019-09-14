@@ -4,19 +4,14 @@
 
 interface Iterable<T> { }
 
-interface IFileMetadata {
-    fileMetadataId: string;
-    width: number;
-    height: number;
+interface IExistingPhoto {
+    id: string;
     takenAt: Date | string | null;
     uploadedAt: Date | string;
     originalFilename: string;
     userName: string | null;
     category: string | null;
     size: number;
-    contentType: string;
-
     url: string;
     thumbnailUrl: string;
-    newFilename: string;
 }
