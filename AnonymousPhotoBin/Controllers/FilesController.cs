@@ -30,8 +30,6 @@ namespace AnonymousPhotoBin.Controllers {
         public FilesController(PhotoBinDbContext context, IConfiguration configuration) {
             _context = context;
             _configuration = configuration;
-
-            _context.Database.SetCommandTimeout(TimeSpan.FromSeconds(130));
         }
         
         [HttpGet]

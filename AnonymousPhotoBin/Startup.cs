@@ -38,7 +38,7 @@ namespace AnonymousPhotoBin
         {
             // Add framework services.
             services.AddDbContext<PhotoBinDbContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("SqlConnectionString")));
+                options.UseCosmos(Configuration.GetConnectionString("CosmosDB"), "AnonymousPhotoBin"));
 
             services.AddSingleton<IConfiguration>(Configuration);
             services.AddMvc(o => o.EnableEndpointRouting = false)
