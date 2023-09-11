@@ -14,15 +14,16 @@ using Microsoft.Extensions.Configuration;
 using System.IO.Compression;
 using System.Threading;
 using SixLabors.ImageSharp.Processing;
-using Microsoft.Azure.Storage.Blob;
-using Microsoft.Azure.Storage;
 using SixLabors.ImageSharp.Metadata.Profiles.Exif;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using System.Net;
 
 namespace AnonymousPhotoBin.Controllers {
     public class FilesController : Controller {
-        private static SHA256 SHA256 = SHA256.Create();
-        private static int MAX_WIDTH = 320;
-        private static int MAX_HEIGHT = 160;
+        private static readonly SHA256 SHA256 = SHA256.Create();
+        private static readonly int MAX_WIDTH = 320;
+        private static readonly int MAX_HEIGHT = 160;
 
         private readonly IConfiguration _configuration;
         private readonly PhotoBinDbContext _context;
@@ -41,52 +42,43 @@ namespace AnonymousPhotoBin.Controllers {
             return Ok(await _context.FileMetadata.ToListAsync());
         }
 
-        private async Task<CloudBlobContainer> GetCloudBlobContainerAsync() {
-            CloudStorageAccount storageAccount =
-                CloudStorageAccount.Parse(_configuration["ConnectionStrings:AzureStorageConnectionString"]);
-            CloudBlobClient blobClient = storageAccount.CreateCloudBlobClient();
-            CloudBlobContainer container = blobClient.GetContainerReference("anonymous-photo-bin");
-            await container.CreateIfNotExistsAsync();
-            await container.SetPermissionsAsync(new BlobContainerPermissions
-            {
-                PublicAccess = BlobContainerPublicAccessType.Blob
-            });
-            return container;
+        private async Task<BlobContainerClient> GetBlobContainerClientAsync() {
+            var blobServiceClient = new BlobServiceClient(_configuration["ConnectionStrings:AzureStorageConnectionString"]);
+            var blobContainerClient = blobServiceClient.GetBlobContainerClient("anonymous-photo-bin");
+            await blobContainerClient.CreateIfNotExistsAsync();
+            await blobContainerClient.SetAccessPolicyAsync(PublicAccessType.Blob);
+            return blobContainerClient;
         }
 
         [HttpGet]
         [Route("api/files/{id}")]
-        public async Task<IActionResult> Get(Guid id, string filename = null) {
-            //var r = BadRequestIfPasswordInvalid();
-            //if (r != null) return r;
-
-            var container = await GetCloudBlobContainerAsync();
-            CloudBlockBlob full = container.GetBlockBlobReference($"full-{id}");
-            return Redirect(full.Uri.AbsoluteUri);
+        public async Task<IActionResult> Get(Guid id) {
+            var blobContainerClient = await GetBlobContainerClientAsync();
+            var blobClient = blobContainerClient.GetBlobClient($"full-{id}");
+            return Redirect(blobClient.Uri.AbsoluteUri);
         }
 
         [HttpGet]
         [Route("api/thumbnails/{id}")]
         public async Task<IActionResult> GetThumbnail(Guid id) {
-            //var r = BadRequestIfPasswordInvalid();
-            //if (r != null) return r;
-
-            var container = await GetCloudBlobContainerAsync();
-            CloudBlockBlob thumb = container.GetBlockBlobReference($"thumb-{id}");
-            return Redirect(thumb.Uri.AbsoluteUri);
+            var blobContainerClient = await GetBlobContainerClientAsync();
+            var blobClient = blobContainerClient.GetBlobClient($"thumb-{id}");
+            return Redirect(blobClient.Uri.AbsoluteUri);
         }
 
         [HttpPost]
         [Route("api/files/zip")]
         public async Task<IActionResult> Zip(string ids, bool? compressed, CancellationToken token) {
-            //var r = BadRequestIfPasswordInvalid();
-            //if (r != null) return r;
-
             Response.ContentType = "application/zip";
-            Response.Headers.Add("Content-Disposition", $"attachment;filename=photobin_{DateTime.UtcNow.ToString("yyyyMMdd-hhmmss")}.zip");
+            Response.Headers.Add("Content-Disposition", $"attachment;filename=photobin_{DateTime.UtcNow:yyyyMMdd-hhmmss}.zip");
 
-            IEnumerable<Guid> guids = ids.Split('\r', '\n', ',', ';').Where(s => s != "").Select(s => Guid.Parse(s));
-            var fileMetadata = await _context.FileMetadata.Where(f => guids.Contains(f.FileMetadataId)).ToListAsync();
+            IEnumerable<Guid> guids = ids
+                .Split('\r', '\n', ',', ';')
+                .Where(s => s != "")
+                .Select(s => Guid.Parse(s));
+            var fileMetadata = await _context.FileMetadata
+                .Where(f => guids.Contains(f.FileMetadataId))
+                .ToListAsync(token);
 
             var compressionLevel = compressed == true
                 ? CompressionLevel.Optimal
@@ -94,50 +86,39 @@ namespace AnonymousPhotoBin.Controllers {
 
             if (compressionLevel == CompressionLevel.NoCompression) {
                 // The size of a .zip file with no compression can be determined from just the names and sizes of the files.
-                using (var s = new LengthStream()) {
-                    using (var archive = new ZipArchive(s, ZipArchiveMode.Create, true)) {
-                        foreach (var file in fileMetadata) {
-                        token.ThrowIfCancellationRequested();
-                            byte[] data = new byte[file.Size];
-
-                            var entry = archive.CreateEntry(file.NewFilename, compressionLevel);
-                            entry.LastWriteTime = file.UploadedAt;
-                            using (var zipStream = entry.Open()) {
-                                await zipStream.WriteAsync(data, 0, data.Length);
-                            }
-                        }
-                    }
-                    Response.Headers.Add("Content-Length", s.Position.ToString());
-                }
-            }
-
-            using (var s = Response.Body) {
+                using var s = new LengthStream();
                 using (var archive = new ZipArchive(s, ZipArchiveMode.Create, true)) {
                     foreach (var file in fileMetadata) {
                         token.ThrowIfCancellationRequested();
-
-                        var container = await GetCloudBlobContainerAsync();
-                        CloudBlockBlob full = container.GetBlockBlobReference($"full-{file.FileMetadataId}");
-                        if (!await full.ExistsAsync())
-                        {
-                            throw new Exception($"{file.FileMetadataId} not found");
-                        }
-
+                        byte[] data = new byte[file.Size];
 
                         var entry = archive.CreateEntry(file.NewFilename, compressionLevel);
                         entry.LastWriteTime = file.UploadedAt;
-                        byte[] data = new byte[1024 * 1024 * 8];
-                        using (var zipStream = entry.Open())
-                        {
-                            for (int offset = 0; offset < file.Size; offset += data.Length)
-                            {
-                                int length = Math.Min(data.Length, file.Size - offset);
-
-                                await full.DownloadRangeToByteArrayAsync(data, 0, offset, length);
-                                await zipStream.WriteAsync(data, 0, length);
-                            }
-                        }
+                        using var zipStream = entry.Open();
+                        await zipStream.WriteAsync(data, token);
                     }
+                }
+                Response.Headers.Add("Content-Length", s.Position.ToString());
+            }
+
+            using (var s = Response.Body) {
+                using var archive = new ZipArchive(s, ZipArchiveMode.Create, true);
+                foreach (var file in fileMetadata) {
+                    token.ThrowIfCancellationRequested();
+
+                    var container = await GetBlobContainerClientAsync();
+                    var full = container.GetBlobClient($"full-{file.FileMetadataId}");
+                    if (!await full.ExistsAsync(token)) {
+                        throw new Exception($"{file.FileMetadataId} not found");
+                    }
+
+                    var streamingDownloadResponse = await full.DownloadStreamingAsync(cancellationToken: token);
+                    using var streamingDownload = streamingDownloadResponse.Value;
+
+                    var entry = archive.CreateEntry(file.NewFilename, compressionLevel);
+                    entry.LastWriteTime = file.UploadedAt;
+                    using var zipStream = entry.Open();
+                    await streamingDownload.Content.CopyToAsync(zipStream, token);
                 }
             }
 
@@ -147,102 +128,113 @@ namespace AnonymousPhotoBin.Controllers {
         [HttpPost]
         [Route("api/files")]
         [RequestSizeLimit(105000000)]
-        public async Task<List<FileMetadata>> Post(List<IFormFile> files, string userName = null, string category = null) {
-            List<FileMetadata> l = new List<FileMetadata>();
+        public async IAsyncEnumerable<FileMetadata> Post(List<IFormFile> files, string userName = null, string category = null) {
             foreach (var file in files) {
-                using (var ms = new MemoryStream()) {
-                    await file.OpenReadStream().CopyToAsync(ms);
-                    byte[] data = ms.ToArray();
+                using var ms = new MemoryStream();
+                await file.OpenReadStream().CopyToAsync(ms);
+                byte[] data = ms.ToArray();
 
-                    byte[] hash = SHA256.ComputeHash(data);
-                    var existing = await _context.FileMetadata.FirstOrDefaultAsync(f2 => f2.Sha256 == hash);
-                    if (existing != null) {
-                        existing.UserName = userName ?? existing.UserName;
-                        existing.Category = category ?? existing.Category;
-                        await _context.SaveChangesAsync();
-                        l.Add(existing);
-                    } else {
-                        int? width = null;
-                        int? height = null;
-                        string takenAt = null;
-                        (byte[], string)? thumbnail = null;
-                        try {
-                            using (var image = Image.Load(data)) {
-                                width = image.Width;
-                                height = image.Height;
-                                if (image.Metadata?.ExifProfile is ExifProfile exif && exif.TryGetValue(ExifTag.DateTimeOriginal, out IExifValue<string> dateTimeStr)) {
-                                    takenAt = dateTimeStr.Value;
-                                }
+                byte[] hash = SHA256.ComputeHash(data);
+                var existing = await _context.FileMetadata.FirstOrDefaultAsync(f2 => f2.Sha256 == hash);
+                if (existing != null) {
+                    existing.UserName = userName ?? existing.UserName;
+                    existing.Category = category ?? existing.Category;
+                    await _context.SaveChangesAsync();
+                    yield return existing;
+                } else {
+                    int? width = null;
+                    int? height = null;
+                    string takenAt = null;
+                    (byte[], string)? thumbnail = null;
+                    try {
+                        using var image = Image.Load(data);
 
-                                if (data.Length <= 1024 * 16) {
-                                    thumbnail = (data, file.ContentType);
-                                } else {
-                                    image.Mutate(x => x.AutoOrient());
+                        width = image.Width;
+                        height = image.Height;
+                        if (image.Metadata?.ExifProfile is ExifProfile exif && exif.TryGetValue(ExifTag.DateTimeOriginal, out IExifValue<string> dateTimeStr)) {
+                            takenAt = dateTimeStr.Value;
+                        }
 
-                                    double ratio = (double)image.Width / image.Height;
-                                    int newW, newH;
-                                    if (ratio > (double)MAX_WIDTH / MAX_HEIGHT) {
-                                        // wider
-                                        newW = MAX_WIDTH;
-                                        newH = (int)(newW / ratio);
-                                    } else {
-                                        // taller
-                                        newH = MAX_HEIGHT;
-                                        newW = (int)(newH * ratio);
-                                    }
-                                    image.Mutate(x => x.Resize(newW, newH));
+                        if (data.Length <= 1024 * 16) {
+                            thumbnail = (data, file.ContentType);
+                        } else {
+                            image.Mutate(x => x.AutoOrient());
 
-                                    using (var jpegThumb = new MemoryStream()) {
-                                        image.SaveAsJpeg(jpegThumb);
-                                        thumbnail = (jpegThumb.ToArray(), "image/jpeg");
-                                    }
-                                }
+                            double ratio = (double)image.Width / image.Height;
+                            int newW, newH;
+                            if (ratio > (double)MAX_WIDTH / MAX_HEIGHT) {
+                                // wider
+                                newW = MAX_WIDTH;
+                                newH = (int)(newW / ratio);
+                            } else {
+                                // taller
+                                newH = MAX_HEIGHT;
+                                newW = (int)(newH * ratio);
                             }
-                        } catch (NotSupportedException) { }
+                            image.Mutate(x => x.Resize(newW, newH));
 
-                        DateTime? takenAtDateTime = null;
-                        if (DateTime.TryParseExact(takenAt, "yyyy:MM:dd HH:mm:ss", null, DateTimeStyles.AssumeLocal, out DateTime dt)) {
-                            takenAtDateTime = dt;
+                            using var jpegThumb = new MemoryStream();
+                            image.SaveAsJpeg(jpegThumb);
+                            thumbnail = (jpegThumb.ToArray(), "image/jpeg");
                         }
+                    } catch (NotSupportedException) { }
 
-                        FileMetadata f = new FileMetadata {
-                            Width = width,
-                            Height = height,
-                            TakenAt = takenAtDateTime,
-                            UploadedAt = DateTime.UtcNow,
-                            OriginalFilename = Path.GetFileName(file.FileName),
-                            UserName = userName,
-                            Category = category,
-                            Size = data.Length,
-                            Sha256 = hash,
-                            ContentType = file.ContentType
-                        };
-                        _context.FileMetadata.Add(f);
-                        await _context.SaveChangesAsync();
-
-                        var container = await GetCloudBlobContainerAsync();
-                        if (thumbnail is (byte[] thumbnailData, string thumbnailType))
-                        {
-                            CloudBlockBlob thumb = container.GetBlockBlobReference($"thumb-{f.FileMetadataId}");
-                            thumb.Properties.ContentType = thumbnailType;
-                            await thumb.UploadFromByteArrayAsync(thumbnailData, 0, thumbnailData.Length);
-                        }
-                        CloudBlockBlob full = container.GetBlockBlobReference($"full-{f.FileMetadataId}");
-                        full.Properties.ContentType = file.ContentType;
-                        await full.UploadFromByteArrayAsync(data, 0, data.Length);
-
-                        l.Add(f);
+                    DateTime? takenAtDateTime = null;
+                    if (DateTime.TryParseExact(takenAt, "yyyy:MM:dd HH:mm:ss", null, DateTimeStyles.AssumeLocal, out DateTime dt)) {
+                        takenAtDateTime = dt;
                     }
+
+                    FileMetadata f = new() {
+                        Width = width,
+                        Height = height,
+                        TakenAt = takenAtDateTime,
+                        UploadedAt = DateTime.UtcNow,
+                        OriginalFilename = Path.GetFileName(file.FileName),
+                        UserName = userName,
+                        Category = category,
+                        Size = data.Length,
+                        Sha256 = hash,
+                        ContentType = file.ContentType
+                    };
+                    _context.FileMetadata.Add(f);
+                    await _context.SaveChangesAsync();
+
+                    var container = await GetBlobContainerClientAsync();
+                    if (thumbnail is (byte[] thumbnailData, string thumbnailType)) {
+                        var thumb = container.GetBlobClient($"thumb-{f.FileMetadataId}");
+                        await thumb.UploadAsync(new BinaryData(thumb), new BlobUploadOptions {
+                            HttpHeaders = new BlobHttpHeaders {
+                                ContentType = thumbnailType
+                            }
+                        });
+                    }
+                    var full = container.GetBlobClient($"full-{f.FileMetadataId}");
+                    await full.UploadAsync(new BinaryData(data), new BlobUploadOptions {
+                        HttpHeaders = new BlobHttpHeaders {
+                            ContentType = file.ContentType
+                        }
+                    });
+
+                    yield return f;
                 }
             }
-            return l;
         }
 
         [HttpPost]
         [Route("api/files/legacy")]
-        public async Task<ContentResult> LegacyPost(List<IFormFile> files, string userName = null, string category = null) {
-            var l = await Post(files, userName, category);
-            return Content("Files uploaded:\n" + string.Join("\n", l.Select(f => $"{f.OriginalFilename} -> {f.Url}")));
+        public async Task<IActionResult> LegacyPost(List<IFormFile> files, string userName = null, string category = null) {
+            Response.StatusCode = 200;
+            Response.ContentType = "text/html";
+
+            using var sw = new StreamWriter(Response.Body);
+            await sw.WriteLineAsync("Files uploaded:");
+            await foreach (var f in Post(files, userName, category)) {
+                await sw.WriteLineAsync(WebUtility.HtmlEncode($"{f.OriginalFilename} -> {f.Url}"));
+            }
+
+            await sw.WriteLineAsync("Upload complete.");
+
+            return new EmptyResult();
         }
 
         private IActionResult BadRequestIfPasswordInvalid() {
@@ -299,10 +291,10 @@ namespace AnonymousPhotoBin.Controllers {
             if (f == null) {
                 return NotFound();
             } else {
-                var container = await GetCloudBlobContainerAsync();
-                CloudBlockBlob full = container.GetBlockBlobReference($"full-{id}");
+                var container = await GetBlobContainerClientAsync();
+                var full = container.GetBlobClient($"full-{id}");
                 await full.DeleteIfExistsAsync();
-                CloudBlockBlob thumb = container.GetBlockBlobReference($"thumb-{id}");
+                var thumb = container.GetBlobClient($"thumb-{id}");
                 await thumb.DeleteIfExistsAsync();
 
                 _context.FileMetadata.Remove(f);
