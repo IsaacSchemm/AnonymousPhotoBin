@@ -28,6 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="C:\Users\isaac\source\repos\IsaacSchemm\AnonymousPhotoBin\AnonymousPhotoBin\.editorconfig" />
     <None Include="wwwroot\scripts\index.ts" />
   </ItemGroup>
 
@@ -35,6 +36,10 @@
     <TypeScriptCompile Include="wwwroot\scripts\datetime-local-polyfill.ts" />
     <TypeScriptCompile Include="wwwroot\scripts\modals.ts" />
     <TypeScriptCompile Include="wwwroot\scripts\list.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EditorConfigFiles Remove="C:\Users\isaac\source\repos\IsaacSchemm\AnonymousPhotoBin\AnonymousPhotoBin\.editorconfig" />
   </ItemGroup>
 
 </Project>
