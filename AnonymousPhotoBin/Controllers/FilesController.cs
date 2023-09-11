@@ -33,14 +33,14 @@ namespace AnonymousPhotoBin.Controllers {
             _fileManagementCredentials = fileManagementCredentials;
             _context = context;
         }
-        
+
         [HttpGet]
         [Route("api/files")]
-        public async Task<IActionResult> Get() {
+        public IActionResult Get() {
             var r = BadRequestIfPasswordInvalid();
             if (r != null) return r;
 
-            return Ok(await _context.FileMetadata.ToListAsync());
+            return Ok(_context.FileMetadata.AsAsyncEnumerable());
         }
 
         private async Task<BlobContainerClient> GetBlobContainerClientAsync() {

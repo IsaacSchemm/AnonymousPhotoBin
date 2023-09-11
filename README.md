@@ -24,4 +24,4 @@ To use this app, you have to deploy it yourself. The most straightforward way is
     
     c. AzureStorageConnectionString (Azure storage connection string)
 
-Users will need to enter the FileManagementPassword to view the "list" page and to edit or delete uploaded files. However, note that the URLs to download pictures are *not* password-protected (although they are randomly generated and difficult to guess).
+Users will need to enter the FileManagementPassword to view the "list" page and to edit or delete uploaded files. However, note that the URLs to download pictures are *not* password-protected (although they each contain a randomly generated GUID).

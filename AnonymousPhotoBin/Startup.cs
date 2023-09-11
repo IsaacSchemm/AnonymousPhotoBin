@@ -24,7 +24,7 @@ namespace AnonymousPhotoBin
                 options.UseCosmos(Configuration.GetConnectionString("CosmosDB"), "AnonymousPhotoBin"));
 
             services.AddSingleton(new StorageAccountCredentials(Configuration["ConnectionStrings:AzureStorageConnectionString"]));
-            services.AddSingleton(new FileManagementCredentials(Configuration["ConnectionStrings:FileManagementPassword"]));
+            services.AddSingleton(new FileManagementCredentials(Configuration["FileManagementPassword"]));
             services.AddControllers();
         }
 
