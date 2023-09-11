@@ -6,20 +6,24 @@
 
 class FileUploadViewModel {
     readonly files: KnockoutObservableArray<FileData>;
+    readonly individualFileProgress: KnockoutObservable<number>;
+    readonly otherFilesProgress: KnockoutObservable<number>;
     readonly caption1: KnockoutObservable<string | null>;
-    readonly totalProgress: KnockoutObservable<number>;
     readonly caption2: KnockoutObservable<string | null>;
     readonly errors: KnockoutObservableArray<string>;
     readonly uploaded: KnockoutObservableArray<IFileMetadata>;
     readonly showUploaded: KnockoutObservable<boolean>;
     readonly uploading: KnockoutObservable<boolean>;
 
-    readonly progressPercentage: KnockoutComputed<string>;
+    readonly filesBeingUploaded: KnockoutObservable<number>;
+    readonly totalProgress: KnockoutComputed<number>;
     readonly uploadButtonText: KnockoutComputed<string>;
 
     constructor() {
         this.files = ko.observableArray();
-        this.totalProgress = ko.observable(0);
+        this.individualFileProgress = ko.observable(0);
+        this.otherFilesProgress = ko.observable(0);
+        this.filesBeingUploaded = ko.observable(1);
         this.caption1 = ko.observable(null);
         this.caption2 = ko.observable(null);
         this.errors = ko.observableArray();
@@ -27,7 +31,7 @@ class FileUploadViewModel {
         this.showUploaded = ko.observable(false);
         this.uploading = ko.observable(false);
 
-        this.progressPercentage = ko.pureComputed(() => `${this.totalProgress()}%`);
+        this.totalProgress = ko.pureComputed(() => (this.individualFileProgress() / this.filesBeingUploaded()) + this.otherFilesProgress());
         this.uploadButtonText = ko.pureComputed(() => {
             const l = this.files().length;
             return l == 1 ? "Upload file" : `Upload ${l} files`;
@@ -37,16 +41,19 @@ class FileUploadViewModel {
             url: "/api/files",
             sequentialUploads: true,
             dataType: "json",
-            add: (e, data: FileData) => {
+            add: (_, data: FileData) => {
                 let tooBig = data.files.filter(f => f.size > 105000000);
                 if (tooBig.length > 0) {
                     alertAsync(`The file "${tooBig[0].name}" cannot be uploaded because it is bigger than 200 MB.`);
                 } else {
                     this.files.push(data);
                 }
+            },
+            progressall: (_, data) => {
+                this.individualFileProgress((data.loaded || 0) / (data.total || 1));
             }
         });
-        $("form").submit(e => {
+        $("form").on("submit", e => {
             e.preventDefault();
             this.upload();
         })
@@ -56,7 +63,7 @@ class FileUploadViewModel {
     }
 
     choose() {
-        $("input[type=file]").click();
+        $("input[type=file]").trigger("click");
     }
 
     async upload() {
@@ -71,17 +78,19 @@ class FileUploadViewModel {
 
         let filesUploaded = 0;
         let bar = 0;
-        let data: FileData | undefined;
         this.caption1("");
         this.caption2("");
         this.errors([]);
+        this.individualFileProgress(0);
+        this.otherFilesProgress(0);
+        this.filesBeingUploaded(files.length);
         for (let data of files) {
             try {
                 this.caption1(`Uploading ${data.files[0].name}...`);
 
                 await data.process();
                 let result: IFileMetadata[] = await data.submit();
-                
+
                 for (const f of result) {
                     this.uploaded.unshift(f);
                 }
@@ -96,11 +105,13 @@ class FileUploadViewModel {
                 }
             }
             this.caption1("");
-            this.totalProgress(++bar / files.length);
+            this.individualFileProgress(0);
+            this.otherFilesProgress(++bar / files.length);
         }
 
         this.caption2("Upload complete.");
-        this.totalProgress(0);
+        this.otherFilesProgress(0);
+        this.filesBeingUploaded(0);
         this.uploading(false);
     }
 
