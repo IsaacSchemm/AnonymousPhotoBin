@@ -202,7 +202,7 @@ namespace AnonymousPhotoBin.Controllers {
                     var container = await GetBlobContainerClientAsync();
                     if (thumbnail is (byte[] thumbnailData, string thumbnailType)) {
                         var thumb = container.GetBlobClient($"thumb-{f.FileMetadataId}");
-                        await thumb.UploadAsync(new BinaryData(thumb), new BlobUploadOptions {
+                        await thumb.UploadAsync(new BinaryData(thumbnailData), new BlobUploadOptions {
                             HttpHeaders = new BlobHttpHeaders {
                                 ContentType = thumbnailType
                             }
