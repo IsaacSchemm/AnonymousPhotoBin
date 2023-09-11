@@ -143,7 +143,7 @@ namespace AnonymousPhotoBin.Controllers {
 
             return new EmptyResult();
         }
-        
+
         [HttpPost]
         [Route("api/files")]
         [RequestSizeLimit(105000000)]
@@ -165,7 +165,7 @@ namespace AnonymousPhotoBin.Controllers {
                         int? width = null;
                         int? height = null;
                         string takenAt = null;
-                        byte[] thumbnail = null;
+                        (byte[], string)? thumbnail = null;
                         try {
                             using (var image = Image.Load(data)) {
                                 width = image.Width;
@@ -175,6 +175,8 @@ namespace AnonymousPhotoBin.Controllers {
                                 }
 
                                 if (data.Length <= 1024 * 16) {
+                                    thumbnail = (data, file.ContentType);
+                                } else {
                                     image.Mutate(x => x.AutoOrient());
 
                                     double ratio = (double)image.Width / image.Height;
@@ -192,7 +194,7 @@ namespace AnonymousPhotoBin.Controllers {
 
                                     using (var jpegThumb = new MemoryStream()) {
                                         image.SaveAsJpeg(jpegThumb);
-                                        thumbnail = jpegThumb.ToArray();
+                                        thumbnail = (jpegThumb.ToArray(), "image/jpeg");
                                     }
                                 }
                             }
@@ -219,11 +221,11 @@ namespace AnonymousPhotoBin.Controllers {
                         await _context.SaveChangesAsync();
 
                         var container = await GetCloudBlobContainerAsync();
-                        if (thumbnail != null)
+                        if (thumbnail is (byte[] thumbnailData, string thumbnailType))
                         {
                             CloudBlockBlob thumb = container.GetBlockBlobReference($"thumb-{f.FileMetadataId}");
-                            thumb.Properties.ContentType = "image/jpeg";
-                            await thumb.UploadFromByteArrayAsync(thumbnail, 0, thumbnail.Length);
+                            thumb.Properties.ContentType = thumbnailType;
+                            await thumb.UploadFromByteArrayAsync(thumbnailData, 0, thumbnailData.Length);
                         }
                         CloudBlockBlob full = container.GetBlockBlobReference($"full-{f.FileMetadataId}");
                         full.Properties.ContentType = file.ContentType;
