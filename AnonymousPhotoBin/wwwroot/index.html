@@ -101,13 +101,13 @@
             Reset
         </div>
         <!-- /ko -->
-        <div id="progress" class="progress">
-            <div class="progress-bar progress-bar-success" data-bind="style: { width: progressPercentage }"></div>
+        <div>
+            <progress max="1" data-bind="value: totalProgress" value="0"></progress>
         </div>
         <div data-bind="text: caption1">
             Caption1
         </div>
-        <div data-bind="text: caption2">
+        <div data-bind="text: caption2" role="status">
             Caption2
         </div>
         <div data-bind="foreach: errors">

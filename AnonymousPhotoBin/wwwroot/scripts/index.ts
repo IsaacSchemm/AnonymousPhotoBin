@@ -6,7 +6,6 @@
 
 class FileUploadViewModel {
     readonly files: KnockoutObservableArray<FileData>;
-    readonly fileProgress: KnockoutObservable<number>;
     readonly caption1: KnockoutObservable<string | null>;
     readonly totalProgress: KnockoutObservable<number>;
     readonly caption2: KnockoutObservable<string | null>;
@@ -15,17 +14,12 @@ class FileUploadViewModel {
     readonly showUploaded: KnockoutObservable<boolean>;
     readonly uploading: KnockoutObservable<boolean>;
 
-    readonly filesBeingUploaded: KnockoutObservable<number>;
-    readonly fileProgressPercentage: KnockoutComputed<string>;
-    readonly totalProgressPercentage: KnockoutComputed<string>;
     readonly progressPercentage: KnockoutComputed<string>;
     readonly uploadButtonText: KnockoutComputed<string>;
 
     constructor() {
         this.files = ko.observableArray();
-        this.fileProgress = ko.observable(0);
         this.totalProgress = ko.observable(0);
-        this.filesBeingUploaded = ko.observable(0);
         this.caption1 = ko.observable(null);
         this.caption2 = ko.observable(null);
         this.errors = ko.observableArray();
@@ -33,9 +27,7 @@ class FileUploadViewModel {
         this.showUploaded = ko.observable(false);
         this.uploading = ko.observable(false);
 
-        this.fileProgressPercentage = ko.pureComputed(() => `${this.fileProgress() * 100}%`);
-        this.totalProgressPercentage = ko.pureComputed(() => `${this.totalProgress() * 100}%`);
-        this.progressPercentage = ko.pureComputed(() => `${((this.fileProgress() / this.filesBeingUploaded()) + this.totalProgress()) * 100}%`);
+        this.progressPercentage = ko.pureComputed(() => `${this.totalProgress()}%`);
         this.uploadButtonText = ko.pureComputed(() => {
             const l = this.files().length;
             return l == 1 ? "Upload file" : `Upload ${l} files`;
@@ -52,9 +44,6 @@ class FileUploadViewModel {
                 } else {
                     this.files.push(data);
                 }
-            },
-            progressall: (e, data) => {
-                this.fileProgress((data.loaded || 0) / (data.total || 0));
             }
         });
         $("form").submit(e => {
@@ -86,7 +75,6 @@ class FileUploadViewModel {
         this.caption1("");
         this.caption2("");
         this.errors([]);
-        this.filesBeingUploaded(files.length);
         for (let data of files) {
             try {
                 this.caption1(`Uploading ${data.files[0].name}...`);
@@ -112,9 +100,7 @@ class FileUploadViewModel {
         }
 
         this.caption2("Upload complete.");
-        this.fileProgress(0);
         this.totalProgress(0);
-        this.filesBeingUploaded(0);
         this.uploading(false);
     }
 
