@@ -10,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using SixLabors.ImageSharp;
 using System.Linq;
-using Microsoft.Extensions.Configuration;
 using System.IO.Compression;
 using System.Threading;
 using SixLabors.ImageSharp.Processing;
@@ -25,12 +24,14 @@ namespace AnonymousPhotoBin.Controllers {
         private static readonly int MAX_WIDTH = 320;
         private static readonly int MAX_HEIGHT = 160;
 
-        private readonly IConfiguration _configuration;
+        private readonly StorageAccountCredentials _storageAccountCredentials;
+        private readonly FileManagementCredentials _fileManagementCredentials;
         private readonly PhotoBinDbContext _context;
 
-        public FilesController(PhotoBinDbContext context, IConfiguration configuration) {
+        public FilesController(PhotoBinDbContext context, FileManagementCredentials fileManagementCredentials, StorageAccountCredentials storageAccountCredentials) {
+            _storageAccountCredentials = storageAccountCredentials;
+            _fileManagementCredentials = fileManagementCredentials;
             _context = context;
-            _configuration = configuration;
         }
         
         [HttpGet]
@@ -43,7 +44,7 @@ namespace AnonymousPhotoBin.Controllers {
         }
 
         private async Task<BlobContainerClient> GetBlobContainerClientAsync() {
-            var blobServiceClient = new BlobServiceClient(_configuration["ConnectionStrings:AzureStorageConnectionString"]);
+            var blobServiceClient = new BlobServiceClient(_storageAccountCredentials.ConnectionString);
             var blobContainerClient = blobServiceClient.GetBlobContainerClient("anonymous-photo-bin");
             await blobContainerClient.CreateIfNotExistsAsync();
             await blobContainerClient.SetAccessPolicyAsync(PublicAccessType.Blob);
@@ -228,21 +229,23 @@ namespace AnonymousPhotoBin.Controllers {
 
             using var sw = new StreamWriter(Response.Body);
             await sw.WriteLineAsync("Files uploaded:");
+            await sw.WriteLineAsync("");
+
             await foreach (var f in Post(files, userName, category)) {
-                await sw.WriteLineAsync(WebUtility.HtmlEncode($"{f.OriginalFilename} -> {f.Url}"));
+                await sw.WriteLineAsync(WebUtility.HtmlEncode($"* {f.OriginalFilename} -> {f.Url}"));
             }
 
+            await sw.WriteLineAsync("");
             await sw.WriteLineAsync("Upload complete.");
 
             return new EmptyResult();
         }
 
         private IActionResult BadRequestIfPasswordInvalid() {
-            string password = _configuration["FileManagementPassword"];
-            if (password == null) {
+            if (_fileManagementCredentials.Password == null) {
                 return BadRequest("FileManagementPassword is not set. Please set in appsettings.json, user secrets file, or Azure web app settings.");
             }
-            if (!Request.Headers["X-FileManagementPassword"].Contains(password)) {
+            if (!Request.Headers["X-FileManagementPassword"].Contains(_fileManagementCredentials.Password)) {
                 return BadRequest("X-FileManagementPassword header is incorrect or missing.");
             }
 
