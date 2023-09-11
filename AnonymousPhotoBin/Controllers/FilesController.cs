@@ -9,7 +9,6 @@ using AnonymousPhotoBin.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.MetaData.Profiles.Exif;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 using System.IO.Compression;
@@ -17,6 +16,7 @@ using System.Threading;
 using SixLabors.ImageSharp.Processing;
 using Microsoft.Azure.Storage.Blob;
 using Microsoft.Azure.Storage;
+using SixLabors.ImageSharp.Metadata.Profiles.Exif;
 
 namespace AnonymousPhotoBin.Controllers {
     public class FilesController : Controller {
@@ -170,9 +170,11 @@ namespace AnonymousPhotoBin.Controllers {
                             using (var image = Image.Load(data)) {
                                 width = image.Width;
                                 height = image.Height;
-                                takenAt = image.MetaData?.ExifProfile?.GetValue(ExifTag.DateTimeOriginal)?.Value?.ToString();
+                                if (image.Metadata?.ExifProfile is ExifProfile exif && exif.TryGetValue(ExifTag.DateTimeOriginal, out IExifValue<string> dateTimeStr)) {
+                                    takenAt = dateTimeStr.Value;
+                                }
 
-                                if (data.Length > 1024 * 16) {
+                                if (data.Length <= 1024 * 16) {
                                     image.Mutate(x => x.AutoOrient());
 
                                     double ratio = (double)image.Width / image.Height;
