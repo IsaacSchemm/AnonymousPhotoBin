@@ -19,19 +19,19 @@ namespace AnonymousPhotoBin.Data {
         public DateTimeOffset UploadedAt { get; set; }
 
         [Required]
-        public string OriginalFilename { get; set; }
+        public string OriginalFilename { get; set; } = "file.dat";
 
-        public string UserName { get; set; }
+        public string? UserName { get; set; }
 
-        public string Category { get; set; }
+        public string? Category { get; set; }
 
         public int Size { get; set; }
 
         [Column(TypeName = "binary(32)")]
-        public byte[] Sha256 { get; set; }
+        public byte[] Sha256 { get; set; } = new byte[32];
 
         [Required]
-        public string ContentType { get; set; }
+        public string ContentType { get; set; } = "application/octet-stream";
 
         public string Url => $"/api/files/{this.FileMetadataId}";
 

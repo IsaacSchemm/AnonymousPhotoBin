@@ -37,7 +37,7 @@ class FileUploadViewModel {
             return l == 1 ? "Upload file" : `Upload ${l} files`;
         });
 
-        $("form").fileupload({
+        $("main form").fileupload({
             url: "/api/files",
             sequentialUploads: true,
             dataType: "json",
@@ -53,17 +53,17 @@ class FileUploadViewModel {
                 this.individualFileProgress((data.loaded || 0) / (data.total || 1));
             }
         });
-        $("form").on("submit", e => {
+        $("main form").on("submit", e => {
             e.preventDefault();
             this.upload();
         })
-        $("input[type=file], input[type=submit]").hide();
+        $("main input[type=file], main input[type=submit]").hide();
 
         ko.applyBindings(this, document.getElementById("ko-area"));
     }
 
     choose() {
-        $("input[type=file]").trigger("click");
+        $("main input[type=file]").trigger("click");
     }
 
     async upload() {

@@ -25,12 +25,12 @@ namespace AnonymousPhotoBin.Controllers {
         private static readonly int MAX_HEIGHT = 160;
 
         private readonly StorageAccountCredentials _storageAccountCredentials;
-        private readonly FileManagementCredentials _fileManagementCredentials;
+        private readonly IAdminPasswordProvider _adminPasswordProvider;
         private readonly PhotoBinDbContext _context;
 
-        public FilesController(PhotoBinDbContext context, FileManagementCredentials fileManagementCredentials, StorageAccountCredentials storageAccountCredentials) {
+        public FilesController(PhotoBinDbContext context, IAdminPasswordProvider adminPasswordProvider, StorageAccountCredentials storageAccountCredentials) {
             _storageAccountCredentials = storageAccountCredentials;
-            _fileManagementCredentials = fileManagementCredentials;
+            _adminPasswordProvider = adminPasswordProvider;
             _context = context;
         }
 
@@ -129,7 +129,7 @@ namespace AnonymousPhotoBin.Controllers {
         [HttpPost]
         [Route("api/files")]
         [RequestSizeLimit(105000000)]
-        public async IAsyncEnumerable<FileMetadata> Post(List<IFormFile> files, string userName = null, string category = null) {
+        public async IAsyncEnumerable<FileMetadata> Post(List<IFormFile> files, string? userName = null, string? category = null) {
             foreach (var file in files) {
                 using var ms = new MemoryStream();
                 await file.OpenReadStream().CopyToAsync(ms);
@@ -145,15 +145,15 @@ namespace AnonymousPhotoBin.Controllers {
                 } else {
                     int? width = null;
                     int? height = null;
-                    string takenAt = null;
+                    string? takenAt = null;
                     (byte[], string)? thumbnail = null;
                     try {
                         using var image = Image.Load(data);
 
                         width = image.Width;
                         height = image.Height;
-                        if (image.Metadata?.ExifProfile is ExifProfile exif && exif.TryGetValue(ExifTag.DateTimeOriginal, out IExifValue<string> dateTimeStr)) {
-                            takenAt = dateTimeStr.Value;
+                        if (image.Metadata?.ExifProfile is ExifProfile exif && exif.TryGetValue(ExifTag.DateTimeOriginal, out IExifValue<string>? dateTimeStr)) {
+                            takenAt = dateTimeStr?.Value;
                         }
 
                         if (data.Length <= 1024 * 16) {
@@ -223,7 +223,7 @@ namespace AnonymousPhotoBin.Controllers {
 
         [HttpPost]
         [Route("api/files/legacy")]
-        public async Task<IActionResult> LegacyPost(List<IFormFile> files, string userName = null, string category = null) {
+        public async Task<IActionResult> LegacyPost(List<IFormFile> files, string? userName = null, string? category = null) {
             Response.StatusCode = 200;
             Response.ContentType = "text/html";
 
@@ -241,11 +241,8 @@ namespace AnonymousPhotoBin.Controllers {
             return new EmptyResult();
         }
 
-        private IActionResult BadRequestIfPasswordInvalid() {
-            if (_fileManagementCredentials.Password == null) {
-                return BadRequest("FileManagementPassword is not set. Please set in appsettings.json, user secrets file, or Azure web app settings.");
-            }
-            if (!Request.Headers["X-FileManagementPassword"].Contains(_fileManagementCredentials.Password)) {
+        private IActionResult? BadRequestIfPasswordInvalid() {
+            if (!Request.Headers["X-FileManagementPassword"].Any(str => _adminPasswordProvider.IsValid(str))) {
                 return BadRequest("X-FileManagementPassword header is incorrect or missing.");
             }
 
@@ -259,8 +256,8 @@ namespace AnonymousPhotoBin.Controllers {
         }
 
         public class FileMetadataPatch {
-            public string UserName { get; set; }
-            public string Category { get; set; }
+            public string? UserName { get; set; }
+            public string? Category { get; set; }
         }
 
         [HttpPatch]
