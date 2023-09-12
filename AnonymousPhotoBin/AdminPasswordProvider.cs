@@ -7,7 +7,7 @@ namespace AnonymousPhotoBin
     {
         private static readonly HashAlgorithm _hashAlgorithm = SHA256.Create();
 
-        private static ReadOnlySpan<byte> ComputeHash(string password, ReadOnlySpan<byte> salt)
+        private static ReadOnlyMemory<byte> ComputeHash(string password, ReadOnlySpan<byte> salt)
         {
             using var ms = new MemoryStream();
             ms.Write(Encoding.UTF8.GetBytes(password));
@@ -22,16 +22,15 @@ namespace AnonymousPhotoBin
         {
             byte[] salt = new byte[16];
 
-            var random = new Random();
-            random.NextBytes(salt);
+            RandomNumberGenerator.Fill(salt);
 
             _salt = salt;
-            _hash = ComputeHash(password, salt).ToArray();
+            _hash = ComputeHash(password, salt);
         }
 
         public bool IsValid(string password)
         {
-            return ComputeHash(password, _salt.Span).SequenceEqual(_hash.Span);
+            return ComputeHash(password, _salt.Span).Span.SequenceEqual(_hash.Span);
         }
     }
 }
