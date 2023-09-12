@@ -16,7 +16,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 builder.Services.AddRazorPages();
 
 builder.Services.AddSingleton<IAdminPasswordProvider>(
-    new AdminPassword(
+    new AdminPasswordProvider(
         builder.Configuration["AdminPassword"]));
 
 var app = builder.Build();
