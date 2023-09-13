@@ -57,16 +57,15 @@ namespace AnonymousPhotoBin.Controllers {
 
         [HttpPost]
         [Route("api/files/zip")]
-        public async Task<IActionResult> Zip(string ids, bool? compressed, CancellationToken token) {
+        public async Task<IActionResult> Zip(IEnumerable<string> ids, bool? compressed, bool? all, CancellationToken token) {
             Response.ContentType = "application/zip";
             Response.Headers.Add("Content-Disposition", $"attachment;filename=photobin_{DateTime.UtcNow:yyyyMMdd-hhmmss}.zip");
 
-            IEnumerable<Guid> guids = ids
-                .Split('\r', '\n', ',', ';')
-                .Where(s => s != "")
-                .Select(s => Guid.Parse(s));
+            var guids = ids
+                .Select(s => Guid.Parse(s))
+                .ToHashSet();
             var fileMetadata = await _context.FileMetadata
-                .Where(f => guids.Contains(f.FileMetadataId))
+                .Where(f => all == true || guids.Contains(f.FileMetadataId))
                 .ToListAsync(token);
 
             var compressionLevel = compressed == true

@@ -54,8 +54,6 @@ class FileUploadViewModel {
             this.upload();
         })
         $("main input[type=file], main input[type=submit]").hide();
-
-        ko.applyBindings(this, document.getElementById("ko-area"));
     }
 
     choose() {
@@ -113,6 +111,6 @@ class FileUploadViewModel {
 
 if ("$" in window) {
     $(() => {
-        new FileUploadViewModel();
+        ko.applyBindings(new FileUploadViewModel(), document.getElementById("ko-area"));
     });
 }

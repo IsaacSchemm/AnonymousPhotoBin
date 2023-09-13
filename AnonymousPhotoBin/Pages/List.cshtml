@@ -113,10 +113,16 @@
         </label>
     </p>
 
+    <form action="/api/files/zip" method="post" id="zipForm">
+        <!-- ko foreach: selectedFiles -->
+        <input type="hidden" name="ids" data-bind="value: fileMetadataId" />
+        <!-- /ko -->
+    </form>
+
     <p align="center">
         <span data-bind="text: selectedFiles().length">0</span> file(s) selected.
         <br />
-        <button class="btn btn-primary" data-bind="disable: selectedFiles().length == 0, click: download">
+        <button class="btn btn-primary" data-bind="disable: selectedFiles().length == 0" type="submit" form="zipForm">
             Download .zip
         </button>
         <button class="btn btn-secondary" data-bind="disable: selectedFiles().length == 0, click: changeUserName">
@@ -210,6 +216,13 @@
         <span data-bind="text: undisplayedSelectedFiles().length"></span> other file(s) are also selected, but are not shown due to filter settings.
     </p>
 </div>
+
+<form action="/api/files/zip" method="post" style="text-align: center" class="pt-4">
+    <input type="hidden" name="all" value="true" />
+    <button class="btn btn-primary" type="submit">
+        Download all (.zip)
+    </button>
+</form>
 
 @section Scripts {
     <script src="scripts/list.js"></script>

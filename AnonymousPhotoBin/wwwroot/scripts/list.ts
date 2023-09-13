@@ -101,7 +101,6 @@ class ListViewModel {
     readonly undisplayedSelectedFiles: KnockoutComputed<FileModel[]>;
 
     public lastClicked: FileModel;
-    private password: string | null;
 
     constructor() {
         this.files = ko.observableArray();
@@ -148,8 +147,6 @@ class ListViewModel {
             const displayedFiles = this.displayedFiles();
             return this.selectedFiles().filter(f => displayedFiles.indexOf(f) < 0);
         });
-
-        this.password = null;
     }
 
     async loadFiles() {
@@ -178,18 +175,6 @@ class ListViewModel {
             throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`);
         }
         return response;
-    }
-
-    download() {
-        const f = $("<form></form>")
-            .attr("method", "post")
-            .attr("action", "/api/files/zip")
-            .appendTo(document.body);
-        $("<textarea></textarea>")
-            .attr("name", "ids")
-            .text(this.selectedFiles().map(f => f.fileMetadataId).join(","))
-            .appendTo(f);
-        f.submit().remove();
     }
 
     async changeUserName() {
