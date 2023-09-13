@@ -1,46 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using System.IO;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Globalization;
 using AnonymousPhotoBin.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
-using SixLabors.ImageSharp;
-using System.Linq;
 using System.IO.Compression;
-using System.Threading;
-using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Metadata.Profiles.Exif;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using System.Net;
+using Microsoft.AspNetCore.Authorization;
 
 namespace AnonymousPhotoBin.Controllers {
+    [Authorize("SingletonAdmin")]
     public class FilesController : Controller {
         private static readonly SHA256 SHA256 = SHA256.Create();
         private static readonly int MAX_WIDTH = 320;
         private static readonly int MAX_HEIGHT = 160;
 
         private readonly StorageAccountCredentials _storageAccountCredentials;
-        private readonly IAdminPasswordProvider _adminPasswordProvider;
         private readonly PhotoBinDbContext _context;
 
-        public FilesController(PhotoBinDbContext context, IAdminPasswordProvider adminPasswordProvider, StorageAccountCredentials storageAccountCredentials) {
+        public FilesController(PhotoBinDbContext context, StorageAccountCredentials storageAccountCredentials) {
             _storageAccountCredentials = storageAccountCredentials;
-            _adminPasswordProvider = adminPasswordProvider;
             _context = context;
         }
 
         [HttpGet]
         [Route("api/files")]
-        public IActionResult Get() {
-            var r = BadRequestIfPasswordInvalid();
-            if (r != null) return r;
-
-            return Ok(_context.FileMetadata.AsAsyncEnumerable());
+        public IAsyncEnumerable<FileMetadata> Get() {
+            return _context.FileMetadata.AsAsyncEnumerable();
         }
 
         private async Task<BlobContainerClient> GetBlobContainerClientAsync() {
@@ -126,6 +114,7 @@ namespace AnonymousPhotoBin.Controllers {
             return new EmptyResult();
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [Route("api/files")]
         [RequestSizeLimit(105000000)]
@@ -221,6 +210,7 @@ namespace AnonymousPhotoBin.Controllers {
             }
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [Route("api/files/legacy")]
         public async Task<IActionResult> LegacyPost(List<IFormFile> files, string? userName = null, string? category = null) {
@@ -241,20 +231,6 @@ namespace AnonymousPhotoBin.Controllers {
             return new EmptyResult();
         }
 
-        private IActionResult? BadRequestIfPasswordInvalid() {
-            if (!Request.Headers["X-FileManagementPassword"].Any(str => _adminPasswordProvider.IsValid(str))) {
-                return BadRequest("X-FileManagementPassword header is incorrect or missing.");
-            }
-
-            return null;
-        }
-
-        [HttpGet]
-        [Route("api/password/check")]
-        public IActionResult CheckPassword() {
-            return BadRequestIfPasswordInvalid() ?? NoContent();
-        }
-
         public class FileMetadataPatch {
             public string? UserName { get; set; }
             public string? Category { get; set; }
@@ -263,9 +239,6 @@ namespace AnonymousPhotoBin.Controllers {
         [HttpPatch]
         [Route("api/files/{id}")]
         public async Task<IActionResult> Patch(Guid id, [FromBody]FileMetadataPatch patch) {
-            var r = BadRequestIfPasswordInvalid();
-            if (r != null) return r;
-
             var f = await _context.FileMetadata.FirstOrDefaultAsync(p => p.FileMetadataId == id);
             if (f == null) {
                 return NotFound();
@@ -284,9 +257,6 @@ namespace AnonymousPhotoBin.Controllers {
         [HttpDelete]
         [Route("api/files/{id}")]
         public async Task<IActionResult> Delete(Guid id) {
-            var r = BadRequestIfPasswordInvalid();
-            if (r != null) return r;
-
             var f = await _context.FileMetadata.FirstOrDefaultAsync(p => p.FileMetadataId == id);
             if (f == null) {
                 return NotFound();

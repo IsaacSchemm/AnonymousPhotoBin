@@ -68,28 +68,6 @@
                 Error
             </div>
         </div>
-        <hr />
-        <!-- ko if: !showUploaded() -->
-        <div class="btn btn-secondary btn-sm" data-bind="click: function() { showUploaded(true) }">
-            Show uploaded files
-        </div>
-        <!-- /ko -->
-        <!-- ko if: showUploaded -->
-        <h2>Uploaded</h2>
-        <br />
-        <br />
-        <!-- ko foreach: uploaded -->
-        <a href="#" target="_blank" data-bind="attr: { href: url }">
-            <img data-bind="attr: { src: thumbnailUrl }" />
-        </a>
-        <div data-bind="text: originalFilename"></div>
-        <br />
-        <!-- /ko -->
-        <div class="btn btn-secondary btn-sm" data-bind="click: clearUploaded, visible: uploaded().length > 0">
-            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-            Clear list
-        </div>
-        <!-- /ko -->
     </div>
 </div>
 

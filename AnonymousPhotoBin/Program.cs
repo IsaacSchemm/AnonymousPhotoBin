@@ -1,7 +1,9 @@
 using AnonymousPhotoBin;
 using AnonymousPhotoBin.Data;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +15,10 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<PhotoBinDbContext>();
-builder.Services.AddRazorPages();
+
+builder.Services.AddRazorPages(options => {
+    options.Conventions.AuthorizePage("/List", "SingletonAdmin");
+});
 
 builder.Services.AddSingleton<IAdminPasswordProvider>(
     new AdminPasswordProvider(
@@ -23,6 +28,14 @@ builder.Services.AddSingleton(
     new StorageAccountCredentials(
         builder.Configuration["ConnectionStrings:AzureStorageConnectionString"]));
 builder.Services.AddControllers();
+
+builder.Services.AddAuthorization(options => {
+    options.AddPolicy("SingletonAdmin", policy =>
+        policy.Requirements.Add(
+            new ClaimsAuthorizationRequirement(
+                ClaimTypes.NameIdentifier,
+                new[] { "81976842-8543-4dac-9729-dde8117b994f" })));
+});
 
 var app = builder.Build();
 

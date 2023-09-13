@@ -11,8 +11,6 @@ class FileUploadViewModel {
     readonly caption1: KnockoutObservable<string | null>;
     readonly caption2: KnockoutObservable<string | null>;
     readonly errors: KnockoutObservableArray<string>;
-    readonly uploaded: KnockoutObservableArray<IFileMetadata>;
-    readonly showUploaded: KnockoutObservable<boolean>;
     readonly uploading: KnockoutObservable<boolean>;
 
     readonly filesBeingUploaded: KnockoutObservable<number>;
@@ -27,8 +25,6 @@ class FileUploadViewModel {
         this.caption1 = ko.observable(null);
         this.caption2 = ko.observable(null);
         this.errors = ko.observableArray();
-        this.uploaded = ko.observableArray();
-        this.showUploaded = ko.observable(false);
         this.uploading = ko.observable(false);
 
         this.totalProgress = ko.pureComputed(() => (this.individualFileProgress() / this.filesBeingUploaded()) + this.otherFilesProgress());
@@ -91,10 +87,6 @@ class FileUploadViewModel {
                 await data.process();
                 let result: IFileMetadata[] = await data.submit();
 
-                for (const f of result) {
-                    this.uploaded.unshift(f);
-                }
-
                 filesUploaded++;
             } catch (e) {
                 console.error(e);
@@ -111,16 +103,11 @@ class FileUploadViewModel {
 
         this.caption2("Upload complete.");
         this.otherFilesProgress(0);
-        this.filesBeingUploaded(0);
         this.uploading(false);
     }
 
     reset() {
         this.files([]);
-    }
-
-    clearUploaded() {
-        this.uploaded([]);
     }
 }
 

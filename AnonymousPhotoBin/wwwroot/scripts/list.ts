@@ -159,25 +159,6 @@ class ListViewModel {
         this.resetFilters();
     }
 
-    private async getPassword() {
-        if (this.password == null) {
-            const p = await promptAsync("Enter the file management password to make changes.");
-            if (p != null) {
-                const response = await fetch("/api/password/check", {
-                    headers: { "X-FileManagementPassword": p },
-                    method: "GET"
-                });
-                if (Math.floor(response.status / 100) == 2) {
-                    this.password = p;
-                } else {
-                    console.error(`${response.status} ${response.statusText}: ${await response.text()}`);
-                    await alertAsync(response.status == 400 ? "The password is not valid." : "An unknown error occurred.");
-                }
-            }
-        }
-        return this.password;
-    }
-
     resetFilters() {
         let dates = this.files().map(f => f.takenOrUploadedAt).sort((a, b) => +a - +b);
         if (dates.length == 0) {
@@ -192,13 +173,7 @@ class ListViewModel {
     }
 
     private async fetchOrError(input: RequestInfo, init?: RequestInit) {
-        const response = await fetch(input, {
-            ...init,
-            headers: {
-                'X-FileManagementPassword': await this.getPassword() || "",
-                ...(init ? init.headers : {})
-            }
-        });
+        const response = await fetch(input, init);
         if (Math.floor(response.status / 100) != 2) {
             throw new Error(`${response.status} ${response.statusText}: ${await response.text()}`);
         }
@@ -218,7 +193,6 @@ class ListViewModel {
     }
 
     async changeUserName() {
-        if (await this.getPassword() == null) return;
         const newName = await promptAsync("What \"taken by\" name should be listed for these files?", this.selectedFiles()[0].userName());
         if (newName != null) {
             try {
@@ -241,7 +215,6 @@ class ListViewModel {
     }
 
     async changeCategory() {
-        if (await this.getPassword() == null) return;
         const newCategory = await promptAsync("What category should these files be part of?", this.selectedFiles()[0].category());
         if (newCategory != null) {
             try {
@@ -264,7 +237,6 @@ class ListViewModel {
     }
 
     async del() {
-        if (await this.getPassword() == null) return;
         if (await confirmAsync(`Are you sure you want to permanently delete ${this.selectedFiles().length} file(s) from the server?`)) {
             try {
                 for (const f of this.selectedFiles()) {
