@@ -91,11 +91,11 @@
         </label>
         <label>
             Taken by:
-            <select class="form-control" data-bind="options: userNames, value: userName" style="max-width: 150px"></select>
+            <select class="form-select" data-bind="options: userNames, value: userName" style="max-width: 150px"></select>
         </label>
         <label>
             Category:
-            <select class="form-control" data-bind="options: categories, value: category" style="max-width: 150px"></select>
+            <select class="form-select" data-bind="options: categories, value: category" style="max-width: 150px"></select>
         </label>
         <button class="btn btn-secondary" data-bind="click: resetFilters">
             Reset
@@ -105,7 +105,7 @@
     <p align="center">
         <label>
             View as:
-            <select class="form-control" data-bind="value: viewStyle">
+            <select class="form-select" data-bind="value: viewStyle">
                 <option value="table">Table</option>
                 <option value="tablethumb">Table + Small Thumbnails</option>
                 <option value="thumb">Large Thumbnails</option>
