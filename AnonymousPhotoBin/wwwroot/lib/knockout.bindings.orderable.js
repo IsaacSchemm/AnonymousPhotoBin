@@ -1,4 +1,6 @@
-﻿ko.bindingHandlers.orderable = {
+﻿// https://github.com/rapito/knockout-orderable/tree/multi-sort
+
+ko.bindingHandlers.orderable = {
     getProperty: function(o, s) {
         // copied from http://stackoverflow.com/questions/6491463/accessing-nested-javascript-objects-with-string-key
         s = s.replace(/\[(\w+)\]/g, '.$1'); // convert indexes to properties

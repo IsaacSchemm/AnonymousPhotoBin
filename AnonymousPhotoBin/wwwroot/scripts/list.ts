@@ -285,7 +285,6 @@ var vm: ListViewModel;
 
 document.addEventListener("DOMContentLoaded", async () => {
     ko.applyBindings(vm = new ListViewModel(), document.getElementById("ko-area"));
-    $("main").applyDateTimeLocalPolyfill();
     vm.files.orderField("takenOrUploadedAt");
     vm.loadFiles();
 }, false);

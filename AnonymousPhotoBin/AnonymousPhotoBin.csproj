@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\scripts\datetime-local-polyfill.ts" />
     <Content Remove="wwwroot\scripts\list.ts" />
   </ItemGroup>
 
@@ -38,7 +37,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <TypeScriptCompile Include="wwwroot\scripts\datetime-local-polyfill.ts" />
     <TypeScriptCompile Include="wwwroot\scripts\modals.ts" />
     <TypeScriptCompile Include="wwwroot\scripts\list.ts" />
   </ItemGroup>
