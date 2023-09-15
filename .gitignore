@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 
 */wwwroot/scripts/*.js*
+profile.arm.json
