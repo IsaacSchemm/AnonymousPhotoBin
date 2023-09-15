@@ -27,8 +27,9 @@ namespace AnonymousPhotoBin.Controllers {
 
         [HttpGet]
         [Route("api/files")]
-        public IAsyncEnumerable<FileMetadata> Get() {
-            return _context.FileMetadata.AsAsyncEnumerable();
+        public async Task<IReadOnlyCollection<FileMetadata>> Get() {
+            var allMetadata = await _context.FileMetadata.ToListAsync();
+            return allMetadata.OrderBy(f => f.TakenAt ?? f.UploadedAt).ToList();
         }
 
         private async Task<BlobContainerClient> GetBlobContainerClientAsync() {
