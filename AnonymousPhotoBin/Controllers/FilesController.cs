@@ -90,7 +90,7 @@ namespace AnonymousPhotoBin.Controllers {
                 Response.Headers.Add("Content-Length", s.Position.ToString());
             }
 
-            using (var s = Response.Body) {
+            using (var s = Response.BodyWriter.AsStream()) {
                 using var archive = new ZipArchive(s, ZipArchiveMode.Create, true);
                 foreach (var file in fileMetadata) {
                     token.ThrowIfCancellationRequested();
