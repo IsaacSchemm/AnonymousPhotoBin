@@ -19,11 +19,11 @@ namespace AnonymousPhotoBin.Controllers {
         private static readonly int MAX_WIDTH = 320;
         private static readonly int MAX_HEIGHT = 160;
 
-        private readonly StorageAccountCredentials _storageAccountCredentials;
+        private readonly BlobServiceClient _blobServiceClient;
         private readonly PhotoBinDbContext _context;
 
-        public FilesController(PhotoBinDbContext context, StorageAccountCredentials storageAccountCredentials) {
-            _storageAccountCredentials = storageAccountCredentials;
+        public FilesController(BlobServiceClient blobServiceClient, PhotoBinDbContext context) {
+            _blobServiceClient = blobServiceClient;
             _context = context;
         }
 
@@ -35,8 +35,7 @@ namespace AnonymousPhotoBin.Controllers {
         }
 
         private async Task<BlobContainerClient> GetBlobContainerClientAsync() {
-            var blobServiceClient = new BlobServiceClient(_storageAccountCredentials.ConnectionString);
-            var blobContainerClient = blobServiceClient.GetBlobContainerClient("anonymous-photo-bin");
+            var blobContainerClient = _blobServiceClient.GetBlobContainerClient("anonymous-photo-bin");
             await blobContainerClient.CreateIfNotExistsAsync();
             await blobContainerClient.SetAccessPolicyAsync(PublicAccessType.Blob);
             return blobContainerClient;

@@ -3,13 +3,14 @@ using AnonymousPhotoBin.Data;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Azure;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddDbContext<PhotoBinDbContext>(options =>
-    options.UseCosmos(builder.Configuration.GetConnectionString("CosmosDB"), "AnonymousPhotoBin"));
+    options.UseCosmos(builder.Configuration.GetConnectionString("CosmosDB")!, "AnonymousPhotoBin"));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
@@ -20,12 +21,12 @@ builder.Services.AddRazorPages(options => {
 });
 
 builder.Services.AddSingleton<IAdminPasswordProvider>(
-    new AdminPasswordProvider(
-        builder.Configuration["AdminPassword"]));
+    new AdminPasswordProvider(builder.Configuration["AdminPassword"]!));
 
-builder.Services.AddSingleton(
-    new StorageAccountCredentials(
-        builder.Configuration["ConnectionStrings:AzureStorageConnectionString"]));
+builder.Services.AddAzureClients(azure => {
+    azure.AddBlobServiceClient(builder.Configuration["ConnectionStrings:AzureStorageConnectionString"]);
+});
+
 builder.Services.AddControllers();
 
 builder.Services.AddAuthorization(options => {
