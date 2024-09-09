@@ -8,7 +8,6 @@ using System.Security.Claims;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<PhotoBinDbContext>(options =>
     options.UseCosmos(builder.Configuration.GetConnectionString("CosmosDB"), "AnonymousPhotoBin"));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();

@@ -8,6 +8,7 @@ namespace AnonymousPhotoBin.Data {
 
         protected override void OnModelCreating(ModelBuilder builder) {
             // Cosmos DB - not sure this is really correct
+            // https://learn.microsoft.com/en-us/ef/core/providers/cosmos/?tabs=dotnet-core-cli#optimistic-concurrency-with-etags
             builder.Entity<IdentityRole>().Property(d => d.ConcurrencyStamp).IsETagConcurrency();
             builder.Entity<IdentityUser>().Property(d => d.ConcurrencyStamp).IsETagConcurrency();
 

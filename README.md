@@ -8,20 +8,18 @@ Anonymous Photo Bin is designed to be used for a short period of time (e.g. duri
 
 ## Deploying on Azure
 
-To use this app, you have to deploy it yourself. The most straightforward way is by creating a Microsoft Azure account.
+1. Create a Cosmos DB database. Add a container with database ID "AnonymousPhotoBin", container ID "PhotoBinDbContext", and partition key "/__partitionKey".
 
-1. Create a Microsoft SQL database. A Basic database should be fine, because it's only storing metadata about the uploaded files.
+2. Create a web app. Anyone with the URL will be able to upload files.
 
-2. Create a web app. Give it a URL that's hard to guess or hit on by accident. Anyone with the URL will be able to upload files.
-
-3. Set up an Azure storage account. This will be used for blob storage - it will hold the actual data of the uploaded files.
+3. Set up an Azure storage account with public blob access allowed. This will hold the actual data of the uploaded files.
 
 4. Set up the application settings:
 
     a. FileManagementPassword (app setting)
 	
-    b. SqlConnectionString (SQL connection string)
+    b. CosmosDB (connection string)
     
-    c. AzureStorageConnectionString (Azure storage connection string)
+    c. AzureStorageConnectionString (connection string)
 
 Users will need to enter the FileManagementPassword to view the "list" page and to edit or delete uploaded files. However, note that the URLs to download pictures are *not* password-protected (although they each contain a randomly generated GUID).

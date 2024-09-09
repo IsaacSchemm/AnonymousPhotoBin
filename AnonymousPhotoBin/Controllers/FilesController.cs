@@ -1,14 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Globalization;
-using AnonymousPhotoBin.Data;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using System.IO.Compression;
-using SixLabors.ImageSharp.Metadata.Profiles.Exif;
+﻿using AnonymousPhotoBin.Data;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using System.Net;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Metadata.Profiles.Exif;
+using SixLabors.ImageSharp.Processing;
+using System.Globalization;
+using System.IO.Compression;
+using System.Net;
+using System.Security.Cryptography;
 
 namespace AnonymousPhotoBin.Controllers {
     [Authorize("SingletonAdmin")]
