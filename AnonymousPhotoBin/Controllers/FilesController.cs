@@ -132,82 +132,81 @@ namespace AnonymousPhotoBin.Controllers {
                     existing.Category = category ?? existing.Category;
                     await _context.SaveChangesAsync();
                     yield return existing;
-                } else {
-                    int? width = null;
-                    int? height = null;
-                    string? takenAt = null;
-                    (byte[], string)? thumbnail = null;
-                    try {
-                        using var image = Image.Load(data);
+                    continue;
+                }
 
-                        width = image.Width;
-                        height = image.Height;
-                        if (image.Metadata?.ExifProfile is ExifProfile exif && exif.TryGetValue(ExifTag.DateTimeOriginal, out IExifValue<string>? dateTimeStr)) {
-                            takenAt = dateTimeStr?.Value;
-                        }
+                int? width = null;
+                int? height = null;
+                string? takenAt = null;
+                (byte[], string)? thumbnail = null;
+                try {
+                    using var image = Image.Load(data);
 
-                        if (data.Length <= 1024 * 16) {
-                            thumbnail = (data, file.ContentType);
-                        } else {
-                            image.Mutate(x => x.AutoOrient());
-
-                            double ratio = (double)image.Width / image.Height;
-                            int newW, newH;
-                            if (ratio > (double)MAX_WIDTH / MAX_HEIGHT) {
-                                // wider
-                                newW = MAX_WIDTH;
-                                newH = (int)(newW / ratio);
-                            } else {
-                                // taller
-                                newH = MAX_HEIGHT;
-                                newW = (int)(newH * ratio);
-                            }
-                            image.Mutate(x => x.Resize(newW, newH));
-
-                            using var jpegThumb = new MemoryStream();
-                            image.SaveAsJpeg(jpegThumb);
-                            thumbnail = (jpegThumb.ToArray(), "image/jpeg");
-                        }
-                    } catch (NotSupportedException) { }
-
-                    DateTime? takenAtDateTime = null;
-                    if (DateTime.TryParseExact(takenAt, "yyyy:MM:dd HH:mm:ss", null, DateTimeStyles.AssumeLocal, out DateTime dt)) {
-                        takenAtDateTime = dt;
+                    width = image.Width;
+                    height = image.Height;
+                    if (image.Metadata?.ExifProfile is ExifProfile exif && exif.TryGetValue(ExifTag.DateTimeOriginal, out IExifValue<string>? dateTimeStr)) {
+                        takenAt = dateTimeStr?.Value;
                     }
 
-                    FileMetadata f = new() {
-                        Width = width,
-                        Height = height,
-                        TakenAt = takenAtDateTime,
-                        UploadedAt = DateTime.UtcNow,
-                        OriginalFilename = Path.GetFileName(file.FileName),
-                        UserName = userName,
-                        Category = category,
-                        Size = data.Length,
-                        Sha256 = hash,
-                        ContentType = file.ContentType
-                    };
-                    _context.FileMetadata.Add(f);
-                    await _context.SaveChangesAsync();
+                    image.Mutate(x => x.AutoOrient());
 
-                    var container = await GetBlobContainerClientAsync();
-                    if (thumbnail is (byte[] thumbnailData, string thumbnailType)) {
-                        var thumb = container.GetBlobClient($"thumb-{f.FileMetadataId}");
-                        await thumb.UploadAsync(new BinaryData(thumbnailData), new BlobUploadOptions {
-                            HttpHeaders = new BlobHttpHeaders {
-                                ContentType = thumbnailType
-                            }
-                        });
+                    double ratio = (double)image.Width / image.Height;
+                    int newW, newH;
+                    if (ratio > (double)MAX_WIDTH / MAX_HEIGHT) {
+                        // wider
+                        newW = MAX_WIDTH;
+                        newH = (int)(newW / ratio);
+                    } else {
+                        // taller
+                        newH = MAX_HEIGHT;
+                        newW = (int)(newH * ratio);
                     }
-                    var full = container.GetBlobClient($"full-{f.FileMetadataId}");
-                    await full.UploadAsync(new BinaryData(data), new BlobUploadOptions {
+                    image.Mutate(x => x.Resize(newW, newH));
+
+                    using var jpegThumb = new MemoryStream();
+                    image.SaveAsJpeg(jpegThumb);
+                    thumbnail = jpegThumb.Length < data.Length
+                        ? (jpegThumb.ToArray(), "image/jpeg")
+                        : (data, file.ContentType);
+                } catch (NotSupportedException) { }
+
+                DateTime? takenAtDateTime = null;
+                if (DateTime.TryParseExact(takenAt, "yyyy:MM:dd HH:mm:ss", null, DateTimeStyles.AssumeLocal, out DateTime dt)) {
+                    takenAtDateTime = dt;
+                }
+
+                FileMetadata f = new() {
+                    Width = width,
+                    Height = height,
+                    TakenAt = takenAtDateTime,
+                    UploadedAt = DateTime.UtcNow,
+                    OriginalFilename = Path.GetFileName(file.FileName),
+                    UserName = userName,
+                    Category = category,
+                    Size = data.Length,
+                    Sha256 = hash,
+                    ContentType = file.ContentType
+                };
+                _context.FileMetadata.Add(f);
+                await _context.SaveChangesAsync();
+
+                var container = await GetBlobContainerClientAsync();
+                if (thumbnail is (byte[] thumbnailData, string thumbnailType)) {
+                    var thumb = container.GetBlobClient($"thumb-{f.FileMetadataId}");
+                    await thumb.UploadAsync(new BinaryData(thumbnailData), new BlobUploadOptions {
                         HttpHeaders = new BlobHttpHeaders {
-                            ContentType = file.ContentType
+                            ContentType = thumbnailType
                         }
                     });
-
-                    yield return f;
                 }
+                var full = container.GetBlobClient($"full-{f.FileMetadataId}");
+                await full.UploadAsync(new BinaryData(data), new BlobUploadOptions {
+                    HttpHeaders = new BlobHttpHeaders {
+                        ContentType = file.ContentType
+                    }
+                });
+
+                yield return f;
             }
         }
 
