@@ -2,6 +2,7 @@ using AnonymousPhotoBin;
 using AnonymousPhotoBin.Data;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Azure;
 using System.Security.Claims;
@@ -11,10 +12,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddDbContext<PhotoBinDbContext>(options =>
     options.UseCosmos(builder.Configuration.GetConnectionString("CosmosDB")!, "AnonymousPhotoBin"));
+builder.Services.AddDbContext<IdentityDbContext>(options =>
+    options.UseInMemoryDatabase(nameof(IdentityDbContext)));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<PhotoBinDbContext>();
+    .AddEntityFrameworkStores<IdentityDbContext>();
 
 builder.Services.AddRazorPages(options => {
     options.Conventions.AuthorizePage("/List", "SingletonAdmin");

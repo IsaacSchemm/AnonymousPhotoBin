@@ -9,19 +9,20 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using AnonymousPhotoBin.Data;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace AnonymousPhotoBin.Areas.Identity.Pages.Account
 {
     public class LoginModel : PageModel
     {
         private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly PhotoBinDbContext _context;
+        private readonly IdentityDbContext _context;
         private readonly IAdminPasswordProvider _adminPasswordProvider;
         private readonly ILogger<LoginModel> _logger;
 
         public LoginModel(
             SignInManager<IdentityUser> signInManager,
-            PhotoBinDbContext context,
+            IdentityDbContext context,
             IAdminPasswordProvider adminPasswordProvider,
             ILogger<LoginModel> logger)
         {
