@@ -16,10 +16,10 @@ Anonymous Photo Bin is designed to be used for a short period of time (e.g. duri
 
 4. Set up the application settings:
 
-    a. FileManagementPassword (app setting)
+    a. AdminPassword (app setting)
 	
     b. CosmosDB (connection string)
     
     c. AzureStorageConnectionString (connection string)
 
-Users will need to enter the FileManagementPassword to view the "list" page and to edit or delete uploaded files. However, note that the URLs to download pictures are *not* password-protected (although they each contain a randomly generated GUID).
+Users will need to enter the AdminPassword to view the "list" page and to edit or delete uploaded files. However, note that the URLs to download pictures are *not* password-protected (although they each contain a randomly generated GUID).
